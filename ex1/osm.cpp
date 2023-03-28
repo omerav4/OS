@@ -15,10 +15,10 @@ double osm_operation_time(unsigned int iterations){
     }
     for (unsigned int i = 0; i < iters; i++) {
         a = 1 + 1;
-        a = a + 1;
-        a = a + 1;
-        a = a + 1;
-        a = a + 1;
+        a = 1 + 1;
+        a = 1 + 1;
+        a = 1 + 1;
+        a = 1 + 1;
     }
     if(gettimeofday(&end_time, nullptr) == -1){
         return -1;
