@@ -66,7 +66,7 @@ double osm_syscall_time(unsigned int iterations){
     if(gettimeofday(&start_time, nullptr) == -1){
         return -1;
     }
-    for (unsigned int i = 0; i < iterations; i++) {
+    for (unsigned int i = 0; i < iters; i++) {
         OSM_NULLSYSCALL;
         OSM_NULLSYSCALL;
         OSM_NULLSYSCALL;

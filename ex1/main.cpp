@@ -7,6 +7,6 @@ int main() {
     double syscall_time = osm_syscall_time(1000000);
     std::cout << "Operation time: " << operation_time << std::endl;
     std::cout << "Function time: " << function_time << std::endl;
-    std::cout << "Syscall time" << syscall_time << std::endl;
+    std::cout << "Syscall time: " << syscall_time << std::endl;
     return 0;
 }
