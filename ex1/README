@@ -1,0 +1,70 @@
+inbar.oren,  omerav
+Inbar Oren (307973867), Omer Avni (316305101)
+EX: 1
+
+FILES:
+osm.cpp
+measurement_running_time_graph.png
+
+
+ANSWERS:
+
+Assigment 1:
+
+According to the strace output of "WhatIdo", the function first creates a directory
+named welcome_dir_1 with the permission 0777, and a subdirectory named "welcome_dir_2",
+with the same permission, inside it. This was done by executing the "mkdir()" system call twice.
+
+The actions described above are followed by two system calls to brk().
+The first call with the argument NULL retrieves the current end of the data segment, which is 0x5602622f3000.
+The second call with the argument 0x560262314000 sets the end of the data segment to this new address.
+
+Then, the program uses "openat" to open a new file called "welcome_file.txt" inside the "welcome_dir_2" directory.
+The "openat" call is used to open files, but using the "O_CREAT" flag indicates that a new file with this name
+should be created if such a file does not exist (which is the situation in our case since "welcome_dir_2"
+is a new empty directory). In addition, the flag "O_WRONLY" indicates that the file is opened in writing mode.
+
+After that, there is a second call for "openat" to open the system file "/etc/localtime".
+The "O_RDONLY" flag indicates that the file is opened in reading mode, and the "O_CLOEXEC" flag indicates
+that the file descriptor should be closed automatically when a new program is executed.
+The next line retrieves information about the "/etc/localtime" file using the "fstat" system call.
+Then, the program reads the content of this file (up to 4096 bytes), which configures the system-wide time zone
+of the local system.
+
+Afterward, there's a "lseek" call that moves the file pointer back by 1506 bytes, 
+and another "read" call that reads 1506 bytes from the new offset position.
+Then, another "fstat" call is executed, now for retrieving information about the "welcome_file.txt" file.
+The following "write" system call writes "welcome to OS-2023" to this file.
+Then, the program calls "close" to close it and "unlink" to delete it.
+
+The program also tries to delete the "welcome_dir_2" directory by calling "unlink" but fails since it is used for
+deleting files and not directories. Then it calls "rmdir" and the file is deleted.
+It does the same for "welcome_dir_1".
+
+Lastly, the program calls the exit_group system call with an exit status of 0 (success), which terminates the program.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
