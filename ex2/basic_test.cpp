@@ -700,7 +700,6 @@ void test_deleting_threads() {
 // by Mor Nahum and Ehud Bartfeld 
 int main()
 {
-    std::cout << "hiiii" << std::endl;
     check_swap();
 //    basic_sleep_check();
 //    basic_block_check();
