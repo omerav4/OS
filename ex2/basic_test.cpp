@@ -631,8 +631,14 @@ Process finished with exit code 0
  */
 void check_swap(){
     uthread_init(1);
+    std::cout << "after init" << std::endl;
+
     make_threads(2 , thread1_swap_check);
+    std::cout << "after make_threads" << std::endl;
+
     quantums_to_run(10);
+    std::cout << "after quantums_to_run" << std::endl;
+
     printf("uthread_terminate id 0");
     uthread_terminate(uthread_get_tid());
 }

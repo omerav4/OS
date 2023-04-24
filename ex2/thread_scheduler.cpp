@@ -30,7 +30,7 @@ ThreadsScheduler::~ThreadsScheduler(){
 }
 
 int ThreadsScheduler::getNextAvailableId(){
-    for (int i = 0; i < MAX_THREAD_NUM; i++){
+    for (int i = 1; i < MAX_THREAD_NUM; i++){
         if (allThreads[i] == nullptr){
             return i;
         }
@@ -39,6 +39,7 @@ int ThreadsScheduler::getNextAvailableId(){
 }
 
 void ThreadsScheduler::addNewThread(Thread *thread, int tid){
+    std::cout << "tid: " << tid << std::endl;
     allThreads[tid] = thread;
 }
 
