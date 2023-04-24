@@ -7,6 +7,7 @@
 #define MAIN_THREAD_ID 0
 #define FAIL -1
 #define SUCCESS 0
+#define FROM_LONGJMP 0
 
 #define ERROR_MESSAGE_QUANTUM_USECS_NON_POSITIVE "thread library error: quantum_usecs is non-positive\n"
 #define ERROR_MESSAGE_SIGACTION_ERROR "system error: sigaction failed\n"
@@ -61,14 +62,6 @@ address_t translate_address(address_t addr)
 }
 #endif
 
-void signal_handler(int sigNum){
-    if (sigNum != SIGVTALRM){
-        return;
-    }
-    std::cerr << "signal_handler" << std::endl;
-
-}
-
 ThreadsScheduler *scheduler;
 struct sigaction sa;
 
@@ -88,6 +81,32 @@ void unblock_signals_set(){
         delete scheduler;
         exit(EXIT_FAILURE);
     }
+}
+
+void signal_handler(int sigNum){
+    if (sigNum != SIGVTALRM){
+        return;
+    }
+
+    block_signals_set();
+    Thread* running = scheduler->getRunningThread();
+    int setjmp_val = sigsetjmp(running->env, 1);
+    if (setjmp_val != FROM_LONGJMP)
+    {
+        if (running->getState() != BLOCKED)
+        {
+            running->setState(READY);
+            scheduler->addReadyThread(running);
+        }
+        scheduler->setNextRunningThread();
+    }
+    if (setitimer(ITIMER_VIRTUAL, scheduler->getVirtualTimer(), NULL))
+    {
+        std::cerr << ERROR_MESSAGE_SETTIMER_ERROR << std::endl;
+        delete scheduler;
+        exit(EXIT_FAILURE);
+    }
+    unblock_signals_set();
 }
 
 int uthread_init(int quantum_usecs) {
@@ -191,7 +210,7 @@ int uthread_terminate(int tid) {
     currentThread = scheduler->getThread(tid);
     state = currentThread->getState();
     if (state == RUNNING) {
-        scheduler->setRunningThread();
+        scheduler->setNextRunningThread();
     }
     else if (state == READY) {
         scheduler->deleteReadyThread(currentThread);

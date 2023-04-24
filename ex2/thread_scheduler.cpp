@@ -39,7 +39,6 @@ int ThreadsScheduler::getNextAvailableId(){
 }
 
 void ThreadsScheduler::addNewThread(Thread *thread, int tid){
-    std::cout << "tid: " << tid << std::endl;
     allThreads[tid] = thread;
 }
 
@@ -68,10 +67,19 @@ int ThreadsScheduler::isTidExist(int tid){
 Thread* ThreadsScheduler::getThread(int tid){
     return allThreads[tid];
 }
-void ThreadsScheduler::setRunningThread(){
-    readyThreads->pop();
-    running = readyThreads->front();
+void ThreadsScheduler::setNextRunningThread(){
+    Thread *nextThread;
+    nextThread = readyThreads->front();
+    if (nextThread == nullptr){
+        nextThread = running;
+    }
+    else{
+        readyThreads->pop();
+    }
+    running = nextThread;
+    running->setState(RUNNING);
     increaseQuantum();
+    siglongjmp(running->env, FROM_LONGJMP);
 }
 
 void ThreadsScheduler::deleteReadyThread(Thread *thread){
@@ -114,6 +122,10 @@ sigset_t* ThreadsScheduler::getSignalsSet(){
 
 int ThreadsScheduler::getRunningThreadTid(){
     return running->getId();
+}
+
+Thread* ThreadsScheduler::getRunningThread(){
+    return running;
 }
 
 int ThreadsScheduler::getTotalQuantums(){

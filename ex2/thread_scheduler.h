@@ -36,11 +36,12 @@ public:
     void addBlockedThread(Thread *thread);
     int isTidExist(int tid);
     Thread* getThread(int tid);
-    void setRunningThread();
+    void setNextRunningThread();
     void deleteReadyThread(Thread *thread);
     void deleteBlockedThread(Thread *thread);
     void deleteThreadTid(int tid);
     sigset_t* getSignalsSet();
+    Thread* getRunningThread();
     int getRunningThreadTid();
     int getTotalQuantums();
     void addSleepingThread(Thread *thread, int num_quantums);
