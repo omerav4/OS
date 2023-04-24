@@ -52,6 +52,11 @@ void ThreadsScheduler::addReadyThread(Thread *thread){
     readyThreads->push(thread);
 }
 
+void ThreadsScheduler::addBlockedThread(Thread *thread){
+    thread->setState(BLOCKED);
+    blockedThreads->push(thread);
+}
+
 int ThreadsScheduler::isTidExist(int tid){
     if (tid < 0 || tid >= MAX_THREAD_NUM || allThreads[tid] == nullptr){
         return FAIL;
