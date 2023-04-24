@@ -5,6 +5,7 @@
 #define FAIL -1
 #define SUCCESS 0
 #define MAIN_THREAD_ID 0
+#define FROM_LONGJMP 3
 
 
 ThreadsScheduler::ThreadsScheduler(int quantum_usecs){

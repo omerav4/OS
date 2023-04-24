@@ -240,7 +240,7 @@ int uthread_block(int tid) {
     currentThread = scheduler->getThread(tid);
     state = currentThread->getState();
     if (state == RUNNING) {
-        scheduler->setRunningThread();
+        scheduler->setNextRunningThread();
     }
     else if (state == READY) {
         scheduler->deleteReadyThread(currentThread);
@@ -286,7 +286,7 @@ int uthread_sleep(int num_quantums){
     }
 
     // changes the running thread and adds sleep counter to the previous one
-    scheduler->setRunningThread();
+    scheduler->setNextRunningThread();
     scheduler->addSleepingThread(currentThread, num_quantums);
     return SUCCESS;
 }
