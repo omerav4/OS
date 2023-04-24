@@ -117,6 +117,7 @@ int uthread_init(int quantum_usecs) {
 
     // creates the main thread (tid = 0)
     uthread_spawn(MAIN_THREAD_ID);
+    return SUCCESS;
 }
 
 int uthread_spawn(thread_entry_point entry_point) {
