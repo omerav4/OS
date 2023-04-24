@@ -23,7 +23,7 @@ private:
 public:
     sigjmp_buf env;
 
-    Thread(int id, char *stack, address sp);
+    Thread(int id, char *stack, address_t sp);
     ~Thread();
 
     int getId();
