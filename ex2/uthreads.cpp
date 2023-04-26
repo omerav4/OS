@@ -123,10 +123,13 @@ void configure_timer(int quantum_usecs){
     {
         std::cerr << ERROR_MESSAGE_SIGACTION_ERROR << std::endl;
     }
+    printf("before");
     timer.it_value.tv_sec = quantum_usecs / TO_SEC;
     timer.it_value.tv_usec = quantum_usecs % TO_SEC;
     timer.it_interval.tv_sec = quantum_usecs / TO_SEC;
     timer.it_interval.tv_usec = quantum_usecs % TO_SEC;
+
+    //printf("after", timer);
 
     // starts a virtual timer. it counts down whenever this process is executing.
     if (setitimer(ITIMER_VIRTUAL, &timer, NULL)) {
@@ -319,6 +322,7 @@ int uthread_get_tid(){
 }
 
 int uthread_get_total_quantums(){
+    printf("hiiii");
     return scheduler->getTotalQuantums();
 }
 
