@@ -115,6 +115,27 @@ void timer_handler(int sig)
     scheduler->setNextRunningThread(FALSE);
 }
 
+void configure_timer(int quantum_usecs){
+    struct itimerval timer;
+    sa.sa_handler = &timer_handler;
+    timer = scheduler->getVirtualTimer();
+    if (sigaction(SIGVTALRM, &sa, NULL) < 0)
+    {
+        std::cerr << ERROR_MESSAGE_SIGACTION_ERROR << std::endl;
+    }
+    timer.it_value.tv_sec = quantum_usecs / TO_SEC;
+    timer.it_value.tv_usec = quantum_usecs % TO_SEC;
+    timer.it_interval.tv_sec = quantum_usecs / TO_SEC;
+    timer.it_interval.tv_usec = quantum_usecs % TO_SEC;
+
+    // starts a virtual timer. it counts down whenever this process is executing.
+    if (setitimer(ITIMER_VIRTUAL, &timer, NULL)) {
+        std::cerr << ERROR_MESSAGE_SETTIMER_ERROR << std::endl;
+//        ~ThreadsScheduler();
+        exit(EXIT_FAILURE);
+    }
+}
+
 int uthread_init(int quantum_usecs) {
     // checks if quantum_usecs is non-positive
     if (quantum_usecs <= 0) {
@@ -139,27 +160,6 @@ int uthread_init(int quantum_usecs) {
     // todo: handle the main thread
     configure_timer(quantum_usecs);
     return SUCCESS;
-}
-
-void configure_timer(int quantum_usecs){
-    struct itimerval *timer;
-    sa.sa_handler = &timer_handler;
-    timer = scheduler->getVirtualTimer();
-    if (sigaction(SIGVTALRM, &sa, NULL) < 0)
-    {
-        std::cerr << ERROR_MESSAGE_SIGACTION_ERROR << std::endl;
-    }
-    timer.it_value.tv_sec = quantum_usecs / TO_SEC;
-    timer.it_value.tv_usec = quantum_usecs % TO_SEC;
-    timer.it_interval.tv_sec = quantum_usecs / TO_SEC;
-    timer.it_interval.tv_usec = quantum_usecs % TO_SEC;
-
-    // starts a virtual timer. it counts down whenever this process is executing.
-    if (setitimer(ITIMER_VIRTUAL, &timer, NULL)) {
-        std::cerr << ERROR_MESSAGE_SETTIMER_ERROR << std::endl;
-//        ~ThreadsScheduler();
-        exit(EXIT_FAILURE);
-    }
 }
 
 int uthread_spawn(thread_entry_point entry_point) {

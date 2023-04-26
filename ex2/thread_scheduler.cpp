@@ -22,7 +22,6 @@ ThreadsScheduler::ThreadsScheduler(int quantum_usecs){
     for (int i = 0; i < MAX_THREAD_NUM; i++){
         allThreads[i] = nullptr;
     }
-    configure_timer(quantum_usecs);
 }
 
 ThreadsScheduler::~ThreadsScheduler(){
@@ -167,6 +166,6 @@ void ThreadsScheduler::updateSleepingThreads(){
     sleepingThreads = helper;
 }
 
-itimerval* ThreadsScheduler::getVirtualTimer(){
-    return &timer;
+itimerval ThreadsScheduler::getVirtualTimer(){
+    return timer;
 }

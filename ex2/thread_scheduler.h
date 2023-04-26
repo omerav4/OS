@@ -47,7 +47,7 @@ public:
     void addSleepingThread(Thread *thread, int num_quantums);
     void increaseQuantum();
     void updateSleepingThreads();
-    itimerval* getVirtualTimer();
+    itimerval getVirtualTimer();
 };
 
 
