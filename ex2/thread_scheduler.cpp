@@ -79,6 +79,7 @@ void ThreadsScheduler::setNextRunningThread(int isCurrentThreadSleeping){
     }
     running = nextThread;
     running->setState(RUNNING);
+    printf("set next running thread");
     increaseQuantum();
     siglongjmp(running->env, FROM_LONGJMP);
 }

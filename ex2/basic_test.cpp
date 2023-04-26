@@ -186,7 +186,6 @@ void endless_run(){
 void quantums_to_run(int num){
     int time = 0 ;
     while (time < num){
-        printf("time %d", time);
         if(uthread_get_total_quantums() > time){
             printf("the current Quantum is : %d\n",uthread_get_total_quantums());
             time = uthread_get_total_quantums();
