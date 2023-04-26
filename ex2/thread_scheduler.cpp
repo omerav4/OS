@@ -142,7 +142,6 @@ void ThreadsScheduler::addSleepingThread(Thread *thread, int num_quantums){
 }
 
 void ThreadsScheduler::increaseQuantum(){
-    printf("qunatum counter %d \n", getTotalQuantums());
     quantumCounter += 1;
     updateSleepingThreads();
 }
