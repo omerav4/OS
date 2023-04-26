@@ -70,7 +70,7 @@ void ThreadsScheduler::setNextRunningThread(int isCurrentThreadSleeping){
     if (nextThread == nullptr){
         //change to main thread? supposed to be the running thread
         nextThread = running;
-        printf("hiiiiii\n")
+        printf("hiiiiii\n");
     }
     else{
         readyThreads->pop();
