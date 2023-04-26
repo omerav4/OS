@@ -70,6 +70,7 @@ void ThreadsScheduler::setNextRunningThread(int isCurrentThreadSleeping){
     if (nextThread == nullptr){
         //change to main thread? supposed to be the running thread
         nextThread = running;
+        printf("hiiiiii\n")
     }
     else{
         readyThreads->pop();
@@ -79,6 +80,7 @@ void ThreadsScheduler::setNextRunningThread(int isCurrentThreadSleeping){
     }
     running = nextThread;
     running->setState(RUNNING);
+    printf("incare\n");
     increaseQuantum();
     siglongjmp(running->env, FROM_LONGJMP);
 }
@@ -130,7 +132,7 @@ Thread* ThreadsScheduler::getRunningThread(){
 }
 
 int ThreadsScheduler::getTotalQuantums(){
-    printf("qunatum %d \n", quantumCounter);
+    //printf("qunatum %d \n", quantumCounter);
     return quantumCounter;
 }
 
@@ -142,6 +144,7 @@ void ThreadsScheduler::addSleepingThread(Thread *thread, int num_quantums){
 }
 
 void ThreadsScheduler::increaseQuantum(){
+    printf("qunatum counter %d \n", quantumCounter);
     quantumCounter += 1;
     updateSleepingThreads();
 }
