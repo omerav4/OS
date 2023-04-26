@@ -632,7 +632,7 @@ Process finished with exit code 0
 void check_swap(){
     uthread_init(1);
     make_threads(2 , thread1_swap_check);
-    quantums_to_run(10);
+    //quantums_to_run(10);
     printf("uthread_terminate id 0");
     uthread_terminate(uthread_get_tid());
 }
