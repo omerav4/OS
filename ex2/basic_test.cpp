@@ -15,7 +15,6 @@ void make_threads(int num,thread_entry_point entry_point ){
         id = uthread_spawn(entry_point);
         printf("make thread :  id = %d\n",id);
     }
-    printf("quantums %d \n", uthread_get_total_quantums());
 }
 int next_time(int runtime){
     if (runtime == uthread_get_quantums(uthread_get_tid())){

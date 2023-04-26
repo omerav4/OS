@@ -5,7 +5,7 @@
 #define FAIL -1
 #define SUCCESS 0
 #define MAIN_THREAD_ID 0
-#define FROM_LONGJMP 3
+#define FROM_LONGJMP 1
 #define FALSE -1
 
 #define ERROR_MESSAGE_SETTIMER_ERROR "system error: settimer failed\n"
@@ -75,9 +75,11 @@ void ThreadsScheduler::setNextRunningThread(int isCurrentThreadSleeping){
         readyThreads->pop();
         if(isCurrentThreadSleeping == FALSE){
             addReadyThread(running);
+            printf("false\n");
         }
     }
     running = nextThread;
+    printf("current id %d \n", running->getId());
     running->setState(RUNNING);
     increaseQuantum();
     siglongjmp(running->env, FROM_LONGJMP);
