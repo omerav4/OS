@@ -155,7 +155,7 @@ int uthread_init(int quantum_usecs) {
     scheduler = new ThreadsScheduler(quantum_usecs);
 
     // creates the main thread (tid = 0)
-    // uthread_spawn(MAIN_THREAD_ID);
+    uthread_spawn(MAIN_THREAD_ID);
 
     // todo: handle the main thread
     configure_timer(quantum_usecs);
