@@ -36,7 +36,7 @@ public:
     void addBlockedThread(Thread *thread);
     int isTidExist(int tid);
     Thread* getThread(int tid);
-    void setNextRunningThread();
+    void setNextRunningThread(int isCurrentThreadSleeping);
     void deleteReadyThread(Thread *thread);
     void deleteBlockedThread(Thread *thread);
     void deleteThreadTid(int tid);

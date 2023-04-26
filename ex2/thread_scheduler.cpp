@@ -6,7 +6,11 @@
 #define SUCCESS 0
 #define MAIN_THREAD_ID 0
 #define FROM_LONGJMP 3
+#define FALSE -1
 
+#define ERROR_MESSAGE_SETTIMER_ERROR "system error: settimer failed\n"
+
+struct sigaction sa = {0};
 
 ThreadsScheduler::ThreadsScheduler(int quantum_usecs){
     readyThreads = new std::queue<Thread*>();
@@ -18,12 +22,7 @@ ThreadsScheduler::ThreadsScheduler(int quantum_usecs){
     for (int i = 0; i < MAX_THREAD_NUM; i++){
         allThreads[i] = nullptr;
     }
-
-    // configures the timer - verify that it's valid!!!
-    timer.it_value.tv_sec = quantum_usecs / TO_SEC;
-    timer.it_value.tv_usec = quantum_usecs % TO_SEC;
-    timer.it_interval.tv_sec = quantum_usecs / TO_SEC;
-    timer.it_interval.tv_usec = quantum_usecs % TO_SEC;
+    configure_timer(quantum_usecs);
 }
 
 ThreadsScheduler::~ThreadsScheduler(){
@@ -68,14 +67,18 @@ int ThreadsScheduler::isTidExist(int tid){
 Thread* ThreadsScheduler::getThread(int tid){
     return allThreads[tid];
 }
-void ThreadsScheduler::setNextRunningThread(){
+void ThreadsScheduler::setNextRunningThread(int isCurrentThreadSleeping){
     Thread *nextThread;
     nextThread = readyThreads->front();
     if (nextThread == nullptr){
+        //change to main thread? supposed to be the running thread
         nextThread = running;
     }
     else{
         readyThreads->pop();
+        if(isCurrentThreadSleeping == FALSE){
+            addReadyThread(running);
+        }
     }
     running = nextThread;
     running->setState(RUNNING);

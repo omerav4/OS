@@ -3,22 +3,26 @@
 #include "thread_scheduler.h"
 #include "thread.h"
 #include <iostream>
+#include <sys/time.h>
 
 #define MAIN_THREAD_ID 0
 #define FAIL -1
 #define SUCCESS 0
 #define FROM_LONGJMP 0
+#define TRUE 1
+#define FALSE -1
 
 #define ERROR_MESSAGE_QUANTUM_USECS_NON_POSITIVE "thread library error: quantum_usecs is non-positive\n"
 #define ERROR_MESSAGE_SIGACTION_ERROR "system error: sigaction failed\n"
-#define ERROR_MESSAGE_SETTIMER_ERROR "system error: settimer failed\n"
 #define ERROR_MESSAGE_NO_AVAILABLE_ID "thread library error: no available id for new thread\n"
 #define ERROR_MESSAGE_CANT_ALLOCATE_STACK "system error: can't allocate space for the stack\n"
 #define ERROR_MESSAGE_NULL_ENTRY_POINT "thread library error: entry_point is null\n"
 #define ERROR_MESSAGE_TID_NOT_EXISTS "thread library error: given tid does not exist\n"
 #define ERROR_MESSAGE_SIGPROMASK_ERROR "system error: sigprocmask failed\n"
 #define ERROR_MESSAGE_MAIN_THREAD_CANT_SLEEP "thread library error: the main thread can't sleep\n"
+#define ERROR_MESSAGE_SETTIMER_ERROR "system error: settimer failed\n"
 
+#define TO_SEC 1000000
 #define STACK_SIZE 4096
 
 
@@ -98,15 +102,17 @@ void signal_handler(int sigNum){
             running->setState(READY);
             scheduler->addReadyThread(running);
         }
-        scheduler->setNextRunningThread();
-    }
-    if (setitimer(ITIMER_VIRTUAL, scheduler->getVirtualTimer(), NULL))
-    {
-        std::cerr << ERROR_MESSAGE_SETTIMER_ERROR << std::endl;
-        delete scheduler;
-        exit(EXIT_FAILURE);
+        scheduler->setNextRunningThread(FALSE);
     }
     unblock_signals_set();
+}
+
+void timer_handler(int sig)
+{
+    block_signals_set();
+    scheduler->increaseQuantum();
+    unblock_signals_set();
+    scheduler->setNextRunningThread(FALSE);
 }
 
 int uthread_init(int quantum_usecs) {
@@ -127,16 +133,33 @@ int uthread_init(int quantum_usecs) {
     // creates the scheduler
     scheduler = new ThreadsScheduler(quantum_usecs);
 
-    // starts a virtual timer. it counts down whenever this process is executing.
-    if (setitimer(ITIMER_VIRTUAL, scheduler->getVirtualTimer(), NULL)) {
-        std::cerr << ERROR_MESSAGE_SETTIMER_ERROR << std::endl;
-        delete scheduler;
-        exit(EXIT_FAILURE);
-    }
-
     // creates the main thread (tid = 0)
     // uthread_spawn(MAIN_THREAD_ID);
+
+    // todo: handle the main thread
+    configure_timer(quantum_usecs);
     return SUCCESS;
+}
+
+void configure_timer(int quantum_usecs){
+    struct itimerval *timer;
+    sa.sa_handler = &timer_handler;
+    timer = scheduler->getVirtualTimer();
+    if (sigaction(SIGVTALRM, &sa, NULL) < 0)
+    {
+        std::cerr << ERROR_MESSAGE_SIGACTION_ERROR << std::endl;
+    }
+    timer.it_value.tv_sec = quantum_usecs / TO_SEC;
+    timer.it_value.tv_usec = quantum_usecs % TO_SEC;
+    timer.it_interval.tv_sec = quantum_usecs / TO_SEC;
+    timer.it_interval.tv_usec = quantum_usecs % TO_SEC;
+
+    // starts a virtual timer. it counts down whenever this process is executing.
+    if (setitimer(ITIMER_VIRTUAL, &timer, NULL)) {
+        std::cerr << ERROR_MESSAGE_SETTIMER_ERROR << std::endl;
+//        ~ThreadsScheduler();
+        exit(EXIT_FAILURE);
+    }
 }
 
 int uthread_spawn(thread_entry_point entry_point) {
@@ -210,7 +233,7 @@ int uthread_terminate(int tid) {
     currentThread = scheduler->getThread(tid);
     state = currentThread->getState();
     if (state == RUNNING) {
-        scheduler->setNextRunningThread();
+        scheduler->setNextRunningThread(FALSE);
     }
     else if (state == READY) {
         scheduler->deleteReadyThread(currentThread);
@@ -240,7 +263,7 @@ int uthread_block(int tid) {
     currentThread = scheduler->getThread(tid);
     state = currentThread->getState();
     if (state == RUNNING) {
-        scheduler->setNextRunningThread();
+        scheduler->setNextRunningThread(FALSE);
     }
     else if (state == READY) {
         scheduler->deleteReadyThread(currentThread);
@@ -286,8 +309,8 @@ int uthread_sleep(int num_quantums){
     }
 
     // changes the running thread and adds sleep counter to the previous one
-    scheduler->setNextRunningThread();
     scheduler->addSleepingThread(currentThread, num_quantums);
+    scheduler->setNextRunningThread(TRUE);
     return SUCCESS;
 }
 
