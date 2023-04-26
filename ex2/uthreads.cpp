@@ -110,9 +110,9 @@ void signal_handler(int sigNum){
 void timer_handler(int sig)
 {
     block_signals_set();
-    scheduler->increaseQuantum();
-    unblock_signals_set();
+    //scheduler->increaseQuantum();
     scheduler->setNextRunningThread(FALSE);
+    unblock_signals_set();
 }
 
 void configure_timer(int quantum_usecs){
