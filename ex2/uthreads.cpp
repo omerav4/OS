@@ -67,7 +67,7 @@ address_t translate_address(address_t addr)
 #endif
 
 ThreadsScheduler *scheduler;
-struct sigaction sa;
+struct sigaction sa = {0};
 
 void block_signals_set(){
     if (sigprocmask(SIG_BLOCK, scheduler->getSignalsSet(), nullptr) == FAIL)

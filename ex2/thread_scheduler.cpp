@@ -10,8 +10,6 @@
 
 #define ERROR_MESSAGE_SETTIMER_ERROR "system error: settimer failed\n"
 
-struct sigaction sa = {0};
-
 ThreadsScheduler::ThreadsScheduler(int quantum_usecs){
     readyThreads = new std::queue<Thread*>();
     blockedThreads = new std::queue<Thread*>();
