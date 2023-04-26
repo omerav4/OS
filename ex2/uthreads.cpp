@@ -136,6 +136,32 @@ void configure_timer(int quantum_usecs){
     }
 }
 
+void create_main_thread(){
+    char *stack;
+    address_t sp;
+    Thread *newThread;
+
+    // creates a new stack
+    stack = new(std::nothrow) char[STACK_SIZE];
+    if (stack == nullptr) {
+        std::cerr << ERROR_MESSAGE_CANT_ALLOCATE_STACK << std::endl;
+    }
+    sp = (address_t) stack + STACK_SIZE - sizeof(address_t);
+
+    // creates the new thread
+    newThread = new Thread(MAIN_THREAD_ID, stack, sp);
+
+    // initializes the env of the new thread to use the right stack, and to run from the function 'entry_point',
+    // when we'll use siglongjmp to jump into the thread.
+    sigsetjmp(newThread->env, 1);
+    ((newThread->env)->__jmpbuf)[JB_SP] = translate_address(sp);
+    //((newThread->env)->__jmpbuf)[JB_PC] = translate_address(pc);
+    sigemptyset(&(newThread->env)->__saved_mask);
+
+    scheduler->addNewThread(newThread, MAIN_THREAD_ID);
+    scheduler->setRunningThread(newThread);
+}
+
 int uthread_init(int quantum_usecs) {
     // checks if quantum_usecs is non-positive
     if (quantum_usecs <= 0) {
@@ -154,13 +180,11 @@ int uthread_init(int quantum_usecs) {
     // creates the scheduler
     scheduler = new ThreadsScheduler(quantum_usecs);
 
-    // creates the main thread (tid = 0)
-    uthread_spawn(MAIN_THREAD_ID);
-
-    // todo: handle the main thread
+    create_main_thread();
     configure_timer(quantum_usecs);
     return SUCCESS;
 }
+
 
 int uthread_spawn(thread_entry_point entry_point) {
     int id;
@@ -202,13 +226,8 @@ int uthread_spawn(thread_entry_point entry_point) {
     sigemptyset(&(newThread->env)->__saved_mask);
 
     // updates the scheduler with the new thread
-    scheduler->addNewThread(newThread, id); //
-    if (id == MAIN_THREAD_ID) {
-        scheduler->setRunningThread(newThread);
-    }
-    else {
-        scheduler->addReadyThread(newThread);
-    }
+    scheduler->addNewThread(newThread, id);
+    scheduler->addReadyThread(newThread);
 
     unblock_signals_set();
     return id;
