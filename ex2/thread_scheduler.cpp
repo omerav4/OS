@@ -9,7 +9,7 @@
 #define FALSE -1
 
 #define ERROR_MESSAGE_SETTIMER_ERROR "system error: settimer failed\n"
-int ThreadsScheduler::quantumCounter = 0;
+int ThreadsScheduler::quantumCounter = 1;
 
 
 ThreadsScheduler::ThreadsScheduler(int quantum_usecs){
