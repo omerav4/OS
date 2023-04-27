@@ -9,13 +9,14 @@
 #define FALSE -1
 
 #define ERROR_MESSAGE_SETTIMER_ERROR "system error: settimer failed\n"
+int ThreadsScheduler::quantumCounter = 0;
+
 
 ThreadsScheduler::ThreadsScheduler(int quantum_usecs){
     readyThreads = new std::queue<Thread*>();
     blockedThreads = new std::queue<Thread*>();
     sleepingThreads = new std::queue<SleepingThread*>();
     running = nullptr;
-    quantumCounter = 0;
 
     for (int i = 0; i < MAX_THREAD_NUM; i++){
         allThreads[i] = nullptr;
