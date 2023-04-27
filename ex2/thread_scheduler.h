@@ -21,7 +21,7 @@ private:
     };
     std::queue<SleepingThread*> *sleepingThreads;
     Thread *running;
-    //static int quantumCounter;
+    static int quantumCounter;
     sigset_t signals_set;
     struct itimerval timer;
 

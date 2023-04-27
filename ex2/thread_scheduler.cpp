@@ -80,6 +80,8 @@ void ThreadsScheduler::setNextRunningThread(int isCurrentThreadSleeping){
     }
     running = nextThread;
     running->setState(RUNNING);
+    printf("quantumCouner %d \n", quantumCounter);
+    printf("uthread %d \n", getTotalQuantums());
     increaseQuantum();
     siglongjmp(running->env, FROM_LONGJMP);
 }
