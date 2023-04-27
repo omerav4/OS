@@ -701,8 +701,8 @@ void test_deleting_threads() {
 // by Mor Nahum and Ehud Bartfeld 
 int main()
 {
-    check_swap();
-//    basic_sleep_check();
+//    check_swap();
+    basic_sleep_check();
 //    basic_block_check();
 //    get_limit_error();
 //    check_uthread_get_quantums();

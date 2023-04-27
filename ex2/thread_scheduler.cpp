@@ -76,12 +76,13 @@ void ThreadsScheduler::setNextRunningThread(int isCurrentThreadSleeping){
         readyThreads->pop();
         if(isCurrentThreadSleeping == FALSE){
             addReadyThread(running);
+            running->setState(READY);
         }
     }
     running = nextThread;
     running->setState(RUNNING);
-    printf("quantumCouner %d \n", quantumCounter);
-    printf("uthread %d \n", getTotalQuantums());
+//    printf("quantumCouner %d \n", quantumCounter);
+//    printf("uthread %d \n", getTotalQuantums());
     increaseQuantum();
     siglongjmp(running->env, FROM_LONGJMP);
 }
