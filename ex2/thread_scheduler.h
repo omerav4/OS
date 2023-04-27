@@ -21,11 +21,11 @@ private:
     };
     std::queue<SleepingThread*> *sleepingThreads;
     Thread *running;
-    static int quantumCounter;
     sigset_t signals_set;
     struct itimerval timer;
 
 public:
+    static int quantumCounter;
     ThreadsScheduler(int quantum_usecs);
     ~ThreadsScheduler();
 

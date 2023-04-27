@@ -134,7 +134,6 @@ Thread* ThreadsScheduler::getRunningThread(){
 }
 
 int ThreadsScheduler::getTotalQuantums(){
-    printf("qunatum %d \n", quantumCounter);
     return quantumCounter;
 }
 
