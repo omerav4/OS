@@ -48,7 +48,7 @@ Thread::Thread(unsigned int id, char *stack, thread_entry_point entry_point)
     _id = id;
     _stack = stack;
     _quantum_counter = 0;
-    _running_quantums = 0;   // TODO initialize with 1 or 0?
+    _running_quantums = 1;   // TODO initialize with 1 or 0?
     _sleep_quantums = 0;
     _entry_point = entry_point;
     _state = READY;
