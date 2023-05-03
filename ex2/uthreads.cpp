@@ -55,16 +55,21 @@ typedef unsigned int address_t;
 
 /* A translation is required when using an address of a variable.
    Use this as a black box in your code. */
-address_t translate_address(address_t addr)
-{
-    address_t ret;
-    asm volatile("xor    %%gs:0x18,%0\n"
-                 "rol    $0x9,%0\n"
-    : "=g" (ret)
-    : "0" (addr));
-    return ret;
-}
+//address_t translate_address(address_t addr)
+//{
+//    address_t ret;
+//    asm volatile("xor    %%gs:0x18,%0\n"
+//                 "rol    $0x9,%0\n"
+//    : "=g" (ret)
+//    : "0" (addr));
+//    return ret;
+//}
+
+
 #endif
+
+#define SECOND 1000000
+#define STACK_SIZE 4096
 
 ThreadsScheduler *scheduler;
 struct sigaction sa = {0};
@@ -344,14 +349,13 @@ int uthread_get_total_quantums(){
 int uthread_get_quantums(int tid){
     Thread *currentThread;
     int quantums;
-    block_signals_set();
 
     // checks if the running thread is the main thread
     if (scheduler->isTidExist(tid) == FAIL){
         std::cerr << ERROR_MESSAGE_MAIN_THREAD_CANT_SLEEP << std::endl;
         return FAIL;
     }
-
+    block_signals_set();
     currentThread = scheduler->getThread(tid);
     quantums = currentThread->getThreadQuantums();
     unblock_signals_set();
