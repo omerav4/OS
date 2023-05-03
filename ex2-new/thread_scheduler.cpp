@@ -106,7 +106,7 @@ void ThreadsScheduler::set_next_running_thread(){
     next_thread->set_state(RUNNING);
     running = next_thread;
     ready_threads->pop();
-    next_thread->increase_running_quantum();
+    running->increase_running_quantum();
     quantum_counter++;   // update the total quantum counter after we change the running thread
     // siglongjmp(running->env, FROM_LONGJMP);
 
