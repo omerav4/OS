@@ -45,7 +45,7 @@ int main()
 {
     printf(GRN "Test 1:    " RESET);
     fflush(stdout);
-
+    p
 	int q[2] = {10, 20};
 	uthread_init(8000);
     if (uthread_spawn(thread1) != 1)
