@@ -40,6 +40,14 @@ ThreadsScheduler::ThreadsScheduler(){
     for (int i = 0; i < MAX_THREAD_NUM; i++){
         all_threads[i] = nullptr;
     }
+    if (sigemptyset(&signals_set) == -1) {
+        //print_error(SYS_ERROR, SIG_BLOCK_ERROR);
+        exit(EXIT_FAILURE);
+    }
+    if (sigaddset(&signals_set, SIGVTALRM) == -1) {
+        //print_error(SYS_ERROR, SIG_BLOCK_ERROR);
+        exit(EXIT_FAILURE);
+    }
 }
 
 ThreadsScheduler::~ThreadsScheduler(){

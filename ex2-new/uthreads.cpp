@@ -156,6 +156,11 @@ int uthread_init(int quantum_usecs) {
 
     // installs the signal handler
     sa.sa_handler = &signals_handler;
+    if (sigaddset(&sa.sa_mask, SIGVTALRM) == -1) {
+        //print_error(SYS_ERROR, SIG_BLOCK_ERROR);
+        exit(EXIT_FAILURE);
+    }
+
     if (sigaction(SIGVTALRM, &sa, nullptr) < 0) {
         std::cerr << ERROR_MESSAGE_SIGACTION_ERROR << std::endl;
         delete scheduler;
