@@ -100,6 +100,7 @@ int Thread::get_running_quantums() const{
 }
 
 void Thread::increase_running_quantum() {
+    printf("thread %d quantum %d", _id, _running_quantums);
     _running_quantums++;
 }
 
