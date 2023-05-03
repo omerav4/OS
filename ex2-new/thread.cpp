@@ -27,27 +27,27 @@ typedef unsigned int address_t;
 #define JB_SP 4
 #define JB_PC 5
 
-
 /* A translation is required when using an address of a variable.
    Use this as a black box in your code. */
-//address_t translate_address(address_t addr)
-//{
-//    address_t ret;
-//    asm volatile("xor    %%gs:0x18,%0\n"
-//                 "rol    $0x9,%0\n"
-//    : "=g" (ret)
-//    : "0" (addr));
-//    return ret;
-//}
+address_t translate_address(address_t addr)
+{
+    address_t ret;
+    asm volatile("xor    %%gs:0x18,%0\n"
+                 "rol    $0x9,%0\n"
+    : "=g" (ret)
+    : "0" (addr));
+    return ret;
+}
 
 #endif
 #define ERROR_MESSAGE_SIGEMPTYSET_ERROR "system error: sigemptyset failed\n"
+#define MAIN_THREAD_ID 0
 
 Thread::Thread(unsigned int id, char *stack, thread_entry_point entry_point)
 {
     _id = id;
     _stack = stack;
-    _quantumCounter = 0;
+    _quantum_counter = 0;
     _running_quantums = 1;   // TODO initialize with 1 or 0?
     _sleep_quantums = 0;
     _entry_point = entry_point;
@@ -59,7 +59,7 @@ Thread::Thread(unsigned int id, char *stack, thread_entry_point entry_point)
  * Default Ctor for the main thread
  */
 Thread::Thread() {
-    _id = 0;
+    _id = MAIN_THREAD_ID;
     _entry_point = nullptr;
     _state = RUNNING;
     _stack = nullptr;
@@ -72,30 +72,30 @@ Thread::~Thread(){
     delete[] _stack;
 }
 
-unsigned Thread::getId() const{
+unsigned Thread::get_id() const{
     return _id;
 }
 
-ThreadState Thread::getState() const{
+ThreadState Thread::get_state() const{
     return _state;
 }
 
-void Thread::setState(ThreadState state){
+void Thread::set_state(ThreadState state){
     _state = state;
     if(state == RUNNING && _state != RUNNING){
-        _quantumCounter += 1;
+        _quantum_counter += 1;
     }
 }
 
-int Thread::getThreadQuantums() const{
-    return _quantumCounter;
+int Thread::get_thread_quantums() const{
+    return _quantum_counter;
 }
 
-int Thread::getSleepingQuantums() const{
+int Thread::get_sleeping_quantums() const{
     return _sleep_quantums;
 }
 
-int Thread::getRunningQuantums() const{
+int Thread::get_running_quantums() const{
     return _running_quantums;
 }
 

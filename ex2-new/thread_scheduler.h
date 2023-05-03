@@ -11,36 +11,36 @@
 
 class ThreadsScheduler{
 private:
-    Thread *allThreads[MAX_THREAD_NUM];
-    std::queue<Thread*> *readyThreads;
-    std::queue<Thread*> *blockedThreads;
-    std::queue<Thread*> *sleepingThreads;
+    Thread *all_threads[MAX_THREAD_NUM];
+    std::queue<Thread*> *ready_threads;
+    std::queue<Thread*> *blocked_threads;
+    std::queue<Thread*> *sleeping_threads;
     Thread *running;
     sigset_t signals_set;
 
 public:
-    static int quantumCounter;
+    static int quantum_counter;
     ThreadsScheduler();
     ~ThreadsScheduler();
+    void free_resources();
 
-    int getNextAvailableId();
-    void addNewThread(Thread *thread, unsigned int tid);
-    void setRunningThread(Thread *thread);
-    void addReadyThread(Thread *thread);
-    void addBlockedThread(Thread *thread);
-    int isTidExist(unsigned int tid);
-    Thread* getThread(unsigned int tid);
-    void setNextRunningThread();
-    void deleteReadyThread(Thread *thread);
-    void deleteBlockedThread(Thread *thread);
-    void deleteThreadTid(unsigned int tid);
-    sigset_t* getSignalsSet();
-    Thread* getRunningThread();
-    unsigned int getRunningThreadTid();
-    int getTotalQuantums();
-    void addSleepingThread(Thread *thread, int num_quantums);
-    void updateSleepingThreads();
+    int get_next_available_id();
+    void add_new_thread(Thread *thread, unsigned int tid);
+    void set_running_thread(Thread *thread);
+    void add_ready_thread(Thread *thread);
+    void add_blocked_thread(Thread *thread);
+    int is_tid_exist(unsigned int tid);
+    Thread* get_thread(unsigned int tid);
+    void set_next_running_thread();
+    void delete_ready_thread(Thread *thread);
+    void delete_blocked_thread(Thread *thread);
+    void delete_thread_tid(unsigned int tid);
+    sigset_t* get_signals_set();
+    Thread* get_running_thread();
+    unsigned int get_running_thread_tid();
+    int get_total_quantums();
+    void add_sleeping_thread(Thread *thread, int num_quantums);
+    void update_sleeping_threads();
 };
-
 
 #endif
