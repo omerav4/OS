@@ -70,7 +70,7 @@ void configure_timer(int quantum_usecs){
     timer.it_value.tv_sec = quantum_usecs;
     timer.it_value.tv_usec = 0;
     timer.it_interval.tv_sec = 0;
-    timer.it_interval.tv_usec = quantum_usecs;
+    timer.it_interval.tv_usec = 0;
 
     // starts a virtual timer, it counts down whenever this process is executing.
     if (setitimer(ITIMER_VIRTUAL, &timer, nullptr)) {
