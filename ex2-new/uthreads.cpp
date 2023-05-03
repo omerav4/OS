@@ -67,10 +67,17 @@ void configure_timer(int quantum_usecs){
     }
 
     // TODO check if it's correct
-    timer.it_value.tv_sec = quantum_usecs;
-    timer.it_value.tv_usec = 0;
-    timer.it_interval.tv_sec = 0;
-    timer.it_interval.tv_usec = 0;
+//    timer.it_value.tv_sec = quantum_usecs;
+//    timer.it_value.tv_usec = 0;
+//    timer.it_interval.tv_sec = 0;
+//    timer.it_interval.tv_usec = 0;
+
+    timer.it_value.tv_sec = quantum_usecs / TO_SEC;        // first time interval, seconds part
+    timer.it_value.tv_usec = quantum_usecs % TO_SEC;        // first time interval, microseconds part
+
+    // configure the timer to expire every quantum.
+    timer.it_interval.tv_sec = quantum_usecs / TO_SEC;    // following time intervals, seconds part
+    timer.it_interval.tv_usec = quantum_usecs % TO_SEC;    // following time intervals, microseconds part
 
     // starts a virtual timer, it counts down whenever this process is executing.
     if (setitimer(ITIMER_VIRTUAL, &timer, nullptr)) {
