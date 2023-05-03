@@ -1,13 +1,13 @@
 #!/bin/bash 
 
-g++ -std=c++11 uthreads.h uthreads.cpp tests/jona1.cpp -o tests/jona1
+g++ -std=c++11 thread.h thread.cpp thread_scheduler.h thread_scheduler.cpp uthreads.h uthreads.cpp tests/jona1.cpp -o tests/jona1
 g++ -std=c++11 uthreads.h uthreads.cpp tests/jona2.cpp -o tests/jona2
 g++ -std=c++11 uthreads.h uthreads.cpp tests/jona3.cpp -o tests/jona3
 g++ -std=c++11 uthreads.h uthreads.cpp tests/jona4.cpp -o tests/jona4
 g++ -std=c++11 uthreads.h uthreads.cpp tests/jona5.cpp -o tests/jona5
 g++ -std=c++11 uthreads.h uthreads.cpp tests/jona6.cpp -o tests/jona6
 
-g++ -std=c++11 uthreads.h uthreads.cpp tests/test1.in.cpp -o tests/drive1
+g++ -std=c++11 thread.h thread.cpp thread_scheduler.h thread_scheduler.cpp uthreads.h uthreads.cpp tests/test1.in.cpp -o tests/drive1
 g++ -std=c++11 uthreads.h uthreads.cpp tests/test2.in.cpp -o tests/drive2
 g++ -std=c++11 uthreads.h uthreads.cpp tests/test3.in.cpp -o tests/drive3
 g++ -std=c++11 uthreads.h uthreads.cpp tests/test4.in.cpp -o tests/drive4
