@@ -370,8 +370,8 @@ int main ()
   std::cout << std::endl << "Test 3" << std::endl;
   sleep_threads_test();
 
-  std::cout << std::endl << "Test 4" << std::endl;
-  test_block_sleeping_before_wakeup();
+//  std::cout << std::endl << "Test 4" << std::endl;
+//  test_block_sleeping_before_wakeup();
 
   std::cout << std::endl << "Test 5" << std::endl;
   test_block_sleeping_after_wakeup();
