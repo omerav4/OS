@@ -218,7 +218,6 @@ int uthread_terminate(int tid) {
 
     // if the given thread is the main thread
     if (tid == MAIN_THREAD_ID){
-        std::cerr << ERROR_MESSAGE_TERMINATE_MAIN_THREAD << std::endl;
         delete scheduler;
         exit(EXIT_SUCCESS);
     }
