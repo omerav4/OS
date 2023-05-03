@@ -126,7 +126,7 @@ void signals_handler(int signal)
  * to the array of the threads
  */
 void create_main_thread(){
-    Thread* new_thread = new Thread();           // there is a default ctor for the main thread
+    Thread* new_thread = new(std::nothrow) Thread();           // there is a default ctor for the main thread
     if(new_thread == nullptr){
         std::cerr << ERROR_MESSAGE_ALLOCATION_FAILURE << std::endl;
         delete scheduler;
@@ -145,7 +145,7 @@ int uthread_init(int quantum_usecs) {
     }
 
     // creates the scheduler and the main thread, and configures the timer
-    scheduler = new ThreadsScheduler();
+    scheduler = new(std::nothrow) ThreadsScheduler();
     if(scheduler == nullptr){
         std::cerr << ERROR_MESSAGE_ALLOCATION_FAILURE << std::endl;
         exit(EXIT_FAILURE);
@@ -176,7 +176,7 @@ int uthread_spawn(thread_entry_point entry_point) {
     int id = scheduler->get_next_available_id();
     if (id == FAIL) {
         std::cerr << ERROR_MESSAGE_NO_AVAILABLE_ID << std::endl;
-        delete scheduler;       // TODO necessary?
+        //delete scheduler;       // TODO necessary?
         return FAIL;
     }
 
@@ -190,7 +190,7 @@ int uthread_spawn(thread_entry_point entry_point) {
     }
 
     // creates the new thread
-    Thread* new_thread = new Thread(id, stack, entry_point);
+    Thread* new_thread = new(std::nothrow) Thread(id, stack, entry_point);
     if (new_thread == nullptr) {
         std::cerr << ERROR_MESSAGE_ALLOCATION_FAILURE << std::endl;
         delete scheduler;

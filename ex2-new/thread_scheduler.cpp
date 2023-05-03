@@ -15,20 +15,20 @@ int ThreadsScheduler::quantum_counter = 1;
 
 
 ThreadsScheduler::ThreadsScheduler(){
-    ready_threads = new std::queue<Thread*>();
+    ready_threads = new(std::nothrow) std::queue<Thread*>();
     if(ready_threads == nullptr){
         std::cerr << ERROR_MESSAGE_ALLOCATION_FAILURE << std::endl;
         exit(EXIT_FAILURE);
     }
 
-    blocked_threads = new std::queue<Thread*>();
+    blocked_threads = new(std::nothrow) std::queue<Thread*>();
     if(blocked_threads == nullptr){
         std::cerr << ERROR_MESSAGE_ALLOCATION_FAILURE << std::endl;
         delete ready_threads;
         exit(EXIT_FAILURE);
     }
 
-    sleeping_threads = new std::queue<Thread*>();
+    sleeping_threads = new(std::nothrow) std::queue<Thread*>();
     if(sleeping_threads == nullptr){
         delete ready_threads;
         delete blocked_threads;
@@ -116,7 +116,7 @@ void ThreadsScheduler::delete_ready_thread(Thread *thread){
     // creates a helper queue, and iterates the ready threads queue until we will find the given thread, and we will
     // not add it to the helper queue
     std::queue<Thread*> *helper_queue;
-    helper_queue = new std::queue<Thread*>();
+    helper_queue = new(std::nothrow) std::queue<Thread*>();
     if(helper_queue == nullptr){
         std::cerr << ERROR_MESSAGE_ALLOCATION_FAILURE << std::endl;
         free_resources();
@@ -138,7 +138,7 @@ void ThreadsScheduler::delete_blocked_thread(Thread *thread){
     // creates a helper queue, and iterates the blocked threads queue until we will find the given thread, and we will
     // not add it to the helper queue
     std::queue<Thread*> *helper_queue;
-    helper_queue = new std::queue<Thread*>();
+    helper_queue = new(std::nothrow) std::queue<Thread*>();
     if(helper_queue == nullptr){
         std::cerr << ERROR_MESSAGE_ALLOCATION_FAILURE << std::endl;
         free_resources();
@@ -188,7 +188,7 @@ void ThreadsScheduler::update_sleeping_threads(){
     // sleeping counter, and if there is an unblocked tread with sleeping counter that equals to 0, adds it to the ready
     // threads queue
     std::queue<Thread*> *helper_queue;
-    helper_queue = new std::queue<Thread*>();
+    helper_queue = new(std::nothrow) std::queue<Thread*>();
     if(helper_queue == nullptr){
         std::cerr << ERROR_MESSAGE_ALLOCATION_FAILURE << std::endl;
         free_resources();
