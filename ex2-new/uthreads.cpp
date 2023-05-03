@@ -168,7 +168,6 @@ int uthread_spawn(thread_entry_point entry_point) {
     // checks if entry_point is null
     if (entry_point == nullptr){
         std::cerr << ERROR_MESSAGE_NULL_ENTRY_POINT << std::endl;
-        delete scheduler;       // TODO necessary?
         return FAIL;
     }
 
@@ -176,7 +175,6 @@ int uthread_spawn(thread_entry_point entry_point) {
     int id = scheduler->get_next_available_id();
     if (id == FAIL) {
         std::cerr << ERROR_MESSAGE_NO_AVAILABLE_ID << std::endl;
-        //delete scheduler;       // TODO necessary?
         return FAIL;
     }
 
@@ -185,7 +183,6 @@ int uthread_spawn(thread_entry_point entry_point) {
     char* stack = new(std::nothrow) char[STACK_SIZE];
     if (stack == nullptr) {
         std::cerr << ERROR_MESSAGE_ALLOCATION_FAILURE << std::endl;
-        delete scheduler;
         return FAIL;
     }
 
@@ -193,7 +190,6 @@ int uthread_spawn(thread_entry_point entry_point) {
     Thread* new_thread = new(std::nothrow) Thread(id, stack, entry_point);
     if (new_thread == nullptr) {
         std::cerr << ERROR_MESSAGE_ALLOCATION_FAILURE << std::endl;
-        delete scheduler;
         return FAIL;
     }
 
@@ -210,7 +206,6 @@ int uthread_terminate(int tid) {
     // checks if the tid is valid
     if(scheduler->is_tid_exist(tid) == FAIL) {
         std::cerr << ERROR_MESSAGE_TID_NOT_EXISTS << std::endl;
-        delete scheduler;       // TODO necessary?
         return FAIL;
     }
 
@@ -243,7 +238,6 @@ int uthread_terminate(int tid) {
         return EXIT_SUCCESS;
     }
     unblock_signals_set();
-    delete scheduler;
     return EXIT_FAILURE;
 }
 
@@ -251,7 +245,6 @@ int uthread_block(int tid) {
     // checks if the tid is valid
     if(scheduler->is_tid_exist(tid) == FAIL || tid == MAIN_THREAD_ID) {
         std::cerr << ERROR_MESSAGE_TID_NOT_EXISTS << std::endl;
-        delete scheduler;       // TODO necessary?
         return FAIL;
     }
 
@@ -277,7 +270,6 @@ int uthread_resume(int tid) {
     // checks if tid exists
     if (scheduler->is_tid_exist(tid) == FAIL) {
         std::cerr << ERROR_MESSAGE_TID_NOT_EXISTS << std::endl;
-        delete scheduler;       // TODO necessary?
         return FAIL;
     }
     block_signals_set();
@@ -302,7 +294,6 @@ int uthread_sleep(int num_quantums){
     // checks if the running thread is the main thread
     if (tid == MAIN_THREAD_ID){
         std::cerr << ERROR_MESSAGE_MAIN_THREAD_CANT_SLEEP << std::endl;
-        delete scheduler;       // TODO necessary?
         return FAIL;
     }
 
@@ -335,7 +326,6 @@ int uthread_get_quantums(int tid){
     block_signals_set();
     if(scheduler->is_tid_exist(tid) == FAIL) {
         std::cerr << ERROR_MESSAGE_TID_NOT_EXISTS << std::endl;
-        delete scheduler;       // TODO necessary?
         unblock_signals_set();
         return FAIL;
     }
