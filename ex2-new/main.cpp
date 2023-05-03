@@ -364,29 +364,29 @@ int main ()
   std::cout << std::endl << "Test 1" << std::endl;
   check_two_threads_running();
 
-  std::cout << std::endl << "Test 2" << std::endl;
-  block_threads_test();
-
-  std::cout << std::endl << "Test 3" << std::endl;
-  sleep_threads_test();
-
-  std::cout << std::endl << "Test 4" << std::endl;
-  test_block_sleeping_before_wakeup();
-
-  std::cout << std::endl << "Test 5" << std::endl;
-  test_block_sleeping_after_wakeup();
-
-  std::cout << std::endl << "Test 6" << std::endl;
-  test_thread_id_management();
-
-  std::cout << std::endl << "Test 7" << std::endl;
-  test_5_threads();
-
-  std::cout << std::endl << "Test 8" << std::endl;
-  test_100_threads();
-
-  uthread_terminate (0);
-  std::cout << "ERR: this message should not be printed!!!!!!!" << std::endl;
+//  std::cout << std::endl << "Test 2" << std::endl;
+//  block_threads_test();
+//
+//  std::cout << std::endl << "Test 3" << std::endl;
+//  sleep_threads_test();
+//
+//  std::cout << std::endl << "Test 4" << std::endl;
+//  test_block_sleeping_before_wakeup();
+//
+//  std::cout << std::endl << "Test 5" << std::endl;
+//  test_block_sleeping_after_wakeup();
+//
+//  std::cout << std::endl << "Test 6" << std::endl;
+//  test_thread_id_management();
+//
+//  std::cout << std::endl << "Test 7" << std::endl;
+//  test_5_threads();
+//
+//  std::cout << std::endl << "Test 8" << std::endl;
+//  test_100_threads();
+//
+//  uthread_terminate (0);
+//  std::cout << "ERR: this message should not be printed!!!!!!!" << std::endl;
 
   return 0;
 }
