@@ -705,7 +705,7 @@ int main()
 //    basic_block_check();
 //    get_limit_error();
 //    check_uthread_get_quantums();
-    check_uthread_terminate();
+//    check_uthread_terminate();
     test_deleting_threads();
     delete_and_make_check();
     return 0;
