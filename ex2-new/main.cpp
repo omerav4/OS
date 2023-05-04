@@ -7,7 +7,7 @@ int a;
 void wait_one_quantum ()
 {
   a = a + 1;
-  for (int j = 0; j < 8000000; ++j)
+  for (int j = 0; j < 533333; ++j)
     {
       a = 1;
     }
