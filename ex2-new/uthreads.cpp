@@ -67,10 +67,10 @@ void configure_timer(int quantum_usecs){
     }
 
     // TODO check if it's correct
-    timer.it_value.tv_sec = quantum_usecs;
-    timer.it_value.tv_usec = 0;
-    timer.it_interval.tv_sec = 0;
-    timer.it_interval.tv_usec = 0;
+    timer.it_value.tv_sec = quantum_usecs / TO_SEC;
+    timer.it_value.tv_usec = quantum_usecs % TO_SEC;
+    timer.it_interval.tv_sec = quantum_usecs / TO_SEC;
+    timer.it_interval.tv_usec = quantum_usecs % TO_SEC;
 
     // starts a virtual timer, it counts down whenever this process is executing.
     if (setitimer(ITIMER_VIRTUAL, &timer, nullptr)) {
@@ -117,7 +117,7 @@ void signals_handler(int signal)
         }
     }
     unblock_signals_set();
-    configure_timer(quantum);
+//    configure_timer(quantum);
     siglongjmp(running->env, 1);
 }
 
@@ -152,6 +152,8 @@ int uthread_init(int quantum_usecs) {
     }
     create_main_thread();
     quantum = quantum_usecs;
+    sigemptyset(scheduler->get_signals_set());
+    sigaddset(scheduler->get_signals_set(),SIGVTALRM);
     configure_timer(quantum);
 
     // installs the signal handler
