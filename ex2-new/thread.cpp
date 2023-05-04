@@ -63,7 +63,7 @@ Thread::Thread() {
     _entry_point = nullptr;
     _state = RUNNING;
     _stack = nullptr;
-    _running_quantums = 1;   // TODO initialize with 1 or 0?
+    _running_quantums = 0;   // TODO initialize with 1 or 0?
     _sleep_quantums = 0;
     setup_thread();
 }
