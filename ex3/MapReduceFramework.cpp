@@ -5,11 +5,7 @@
 
 typedef std::atomic<int> atomicIntCounter;
 typedef std::atomic<uint64_t> atomicJobStage;
-
-#define UNDEFINED 0
-#define MAP 1
-#define SHUFFLE 2
-#define REDUCE 3
+typedef std::vector<IntermediateVec*> shuffeledVector;
 
 typedef struct {
     int threadID;
@@ -47,6 +43,8 @@ typedef struct {
     atomicIntCounter* inputCounter;
 
     atomicJobStage* atomicStage;
+    shuffeledVector* shuffeledVector;
+
 
 //    std::atomic<uint64_t>* atomicState;
 //    atomicIntCounter *atomicInputCounter;
@@ -64,22 +62,87 @@ void updateStage(JobContext* job, int stage){
     //     (*(context->atomicState)).fetch_add((uint64_t)1 << 62);
 }
 
-void mapPhase(JobContext* job){
-    InputVec* inputVec = job->inputVec;
-    if(checkStage(job) == UNDEFINED){
-        updateStage(job, MAP);
+void mapPhase(ThreadContext* thread, JobContext* job){
+    InputVec* inputVec = thread->inputVec;
+    if(checkStage(job) == UNDEFINED_STAGE){
+        updateStage(job, MAP_STAGE);
     }
     int inputVecSize = inputVec->size();
-    atomicIntCounter index = *(job->inputCounter)++;
+    atomicIntCounter index = (*(job->inputCounter))++;              // TODO check if it's supposed to be thread
     while (index < inputVecSize){
-        auto pair = job->inputVec->at(index);
+        auto pair = inputVec->at(index);
         job->client->map(pair.first, pair.second, job);
-        //(*(job->atomicStage)).fetch_add(1<<31)
+        (*(job->atomicStage)).fetch_add(1<<31);
         index = (*(job->inputCounter))++;
     }
+}
 
+bool compare(IntermediatePair pair1, IntermediatePair pair2){
+    // TODO implement
+}
 
+void sortPhase(ThreadContext* thread){
+    std::sort(thread->intermediateVec->begin(),thread->intermediateVec->end(), compare);
+}
 
+void shufflePhase(ThreadContext* thread, JobContext* job){
+    K2* minKey;
+
+    // checks if all intermediate vectors are empty
+    for (int i = 0; i < job->multiThreadLevel; i++){
+        if (minKey == nullptr){
+            minKey = thread->intermediateVec->at(0).first;
+        }
+        else{
+            break;
+        }
+    }
+    if (minKey == nullptr){
+        return;
+    }
+    int multiThreadLevel = job->multiThreadLevel;
+    while(true){
+        // find the minimal key
+        for (int i = 0; i < multiThreadLevel; i++){
+            ThreadContext* currentThread = job->threadContexts + i;
+            K2* currentKey = currentThread->intermediateVec->at(0).first;
+            if(currentKey == nullptr){
+                continue;
+            }
+            else if(currentKey < minKey){
+                minKey = currentKey;
+            }
+        }
+        IntermediateVec* temp = new IntermediateVec();
+        for(int i = 0; i < multiThreadLevel; i++){
+            ThreadContext* currentThread = job->threadContexts + i;
+            K2* currentKey = currentThread->intermediateVec->at(0).first;
+            if(currentKey == minKey){
+                IntermediateVec* currentVector = currentThread->intermediateVec;
+                IntermediatePair pair = currentVector->at(0);
+                currentVector->erase(currentVector->begin());
+                temp->push_back(pair);
+                //(*(job->atomicStage)).fetch_add(1 << 31);       // TODO check where it's supposed to be
+
+            }
+        job->shuffeledVector->push_back(temp);
+        }
+    }
+}
+
+void reducePhase(JobContext* job){
+    shuffeledVector* shuffeledVector = job->shuffeledVector;
+    if(checkStage(job) == SHUFFLE_STAGE){
+        updateStage(job, REDUCE_STAGE);
+    }
+    int shuffeledVecSize = shuffeledVector->size();
+    atomicIntCounter index = (*(job->outputCounter))++;              // TODO check if it's supposed to be thread
+    while (index < shuffeledVecSize){
+        auto currentVector = shuffeledVector->at(index);
+        job->client->reduce(currentVector, job);
+        (*(job->atomicStage)).fetch_add(currentVector->size() <<31);
+        index = (*(job->outputCounter))++;
+    }
 }
 
 void emit2 (K2* key, V2* value, void* context){
