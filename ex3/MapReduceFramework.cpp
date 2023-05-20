@@ -3,6 +3,7 @@
 #include "Barrier.h"
 #include <atomic>
 
+///------------------------------------------- typedefs -------------------------------------------------------
 typedef std::atomic<int> atomicIntCounter;
 typedef std::atomic<uint64_t> atomicJobStage;
 typedef std::vector<IntermediateVec*> shuffeledVector;
@@ -53,6 +54,7 @@ typedef struct {
 
 } JobContext;
 
+///------------------------------------------- phases -------------------------------------------------------
 int checkStage(JobContext* job){
     //TODO implement
 }
@@ -144,6 +146,17 @@ void reducePhase(JobContext* job){
         index = (*(job->outputCounter))++;
     }
 }
+
+///------------------------------------------- phases -------------------------------------------------------
+void* mapReduce(ThreadContext* thread, JobContext* job){
+    mapPhase(thread, job);
+    sortPhase(thread);
+
+
+
+}
+
+///------------------------------------------- library -------------------------------------------------------
 
 void emit2 (K2* key, V2* value, void* context){
     auto threadContext = (ThreadContext*) context;
