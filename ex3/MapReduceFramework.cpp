@@ -11,9 +11,6 @@ typedef std::vector<IntermediateVec*> shuffeledVector;
 typedef struct {
     int threadID;
     pthread_t* thread;
-//    std::atomic<uint64_t>* atomicState;
-//    atomicIntCounter* atomicInputCounter;
-//    atomicIntCounter* atomicReduceCounter;
     atomicIntCounter* intermediateCounter;
     atomicIntCounter* outputCounter;
 
@@ -36,7 +33,7 @@ typedef struct {
     IntermediateVec* intermediateVec;
 
     pthread_mutex_t* outputMutex;
-    Barrier barrier;
+    Barrier* barrier;
     MapReduceClient const *client;
 
     atomicIntCounter* intermediateCounter;
@@ -45,13 +42,6 @@ typedef struct {
 
     atomicJobStage* atomicStage;
     shuffeledVector* shuffeledVector;
-
-
-//    std::atomic<uint64_t>* atomicState;
-//    atomicIntCounter *atomicInputCounter;
-//    atomicIntCounter *atomicReduceCounter;
-//    atomicIntCounter *atomicToShuffleCounter;
-
 } JobContext;
 
 ///------------------------------------------- phases -------------------------------------------------------
@@ -89,6 +79,9 @@ void sortPhase(ThreadContext* thread){
 
 void shufflePhase(ThreadContext* thread, JobContext* job){
     K2* minKey;
+    if(checkStage(job) == MAP_STAGE){
+        updateStage(job, SHUFFLE_STAGE);
+    }
 
     // checks if all intermediate vectors are empty
     for (int i = 0; i < job->multiThreadLevel; i++){
@@ -134,7 +127,7 @@ void shufflePhase(ThreadContext* thread, JobContext* job){
 
 void reducePhase(JobContext* job){
     shuffeledVector* shuffeledVector = job->shuffeledVector;
-    if(checkStage(job) == SHUFFLE_STAGE){
+    if(checkStage(job) == SHUFFLE_STAGE || checkStage(job) == MAP_STAGE){
         updateStage(job, REDUCE_STAGE);
     }
     int shuffeledVecSize = shuffeledVector->size();
@@ -147,13 +140,28 @@ void reducePhase(JobContext* job){
     }
 }
 
-///------------------------------------------- phases -------------------------------------------------------
+///------------------------------------------- flows -------------------------------------------------------
+void waitForAllThreads(JobContext* job){
+    job->barrier->barrier();
+}
+
 void* mapReduce(ThreadContext* thread, JobContext* job){
-    mapPhase(thread, job);
+    mapPhase(thread, job);          // TODO make sure that mapPhase gets the job as a parameter in pthread_init
     sortPhase(thread);
+    waitForAllThreads(job);
+    reducePhase(job);
+}
 
-
-
+void* mapShuffleReduce(ThreadContext* thread, JobContext* job){
+    mapPhase(thread, job);          // TODO make sure that mapPhase gets the job as a parameter in pthread_init
+    sortPhase(thread);
+    waitForAllThreads(job);
+    // set to zero percentage counter
+    (*(job->atomicStage)) = *(job->atomicStage) & (3 << 62);    // TODO set to zero percentage counter?!
+    // TODO shuffle counter?
+    shufflePhase(thread, job);
+    waitForAllThreads(job);         // TODO needed?
+    reducePhase(job);
 }
 
 ///------------------------------------------- library -------------------------------------------------------
