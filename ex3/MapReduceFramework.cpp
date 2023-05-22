@@ -265,7 +265,7 @@ void* mapShuffleReduce(ThreadContext* thread, JobContext* job){
     waitForAllThreads(job);
     // set to zero percentage counter
     (*(job->atomicStage)) = *(job->atomicStage) & (3 << 62);    // TODO set to zero percentage counter?!
-    // TODO shuffle counter?????
+    // TODO shuffle counter??????
     shufflePhase(thread, job);
     waitForAllThreads(job);         // TODO needed?
     reducePhase(job);
