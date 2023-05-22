@@ -136,7 +136,7 @@ JobContext* createJobContext(ThreadContext* threads, int multiThreadLevel,
 ///-------------------------------- phases ------------------------------------
 int checkStage(JobContext* job)
 {
-    (auto) state = (*(job->atomicStage)).load();
+    auto state = (*(job->atomicStage)).load();
     return STAGE_MASK(state);
 }
 
@@ -149,7 +149,7 @@ void updateStage(JobContext* job, int stage){
 
 void mapPhase(ThreadContext* thread, JobContext* job)
 {
-    InputVec *inputVec = thread->inputVec;
+    InputVec *inputVec = job->inputVec;
     if (checkStage(job) == UNDEFINED_STAGE)
     {
         updateStage(job, MAP_STAGE);
@@ -164,7 +164,6 @@ void mapPhase(ThreadContext* thread, JobContext* job)
         index = (*(job->inputCounter))++;
     }
 }
-
 
 bool compare(IntermediatePair pair1, IntermediatePair pair2){
     return pair1.first < pair2.first
@@ -192,8 +191,9 @@ void shufflePhase(ThreadContext* thread, JobContext* job){
     if (minKey == nullptr){
         return;
     }
+
     int multiThreadLevel = job->multiThreadLevel;
-    bool empty = true
+    bool empty = true;
     while(true)
     {
         // find the minimal key
@@ -207,27 +207,25 @@ void shufflePhase(ThreadContext* thread, JobContext* job){
             else if(currentKey < minKey){
                 minKey = currentKey;
             }
-            all_empty = false;
+            empty = false;
         }
-        if(all_empty)
-        {
+        if(empty){
             break;
         }
     }
-        IntermediateVec* temp = new IntermediateVec();
-        for(int i = 0; i < multiThreadLevel; i++){
-            ThreadContext* currentThread = job->threadContexts + i;
-            K2* currentKey = currentThread->intermediateVec->at(0).first;
-            if(currentKey == minKey){
-                IntermediateVec* currentVector = currentThread->intermediateVec;
-                IntermediatePair pair = currentVector->at(0);
-                currentVector->erase(currentVector->begin());
-                temp->push_back(pair);
-                INCREMENT_ALREADY_PROCESSED(*(job->atomicState));  // TODO check where it's supposed to be
+    IntermediateVec* temp = new IntermediateVec();
+    for(int i = 0; i < multiThreadLevel; i++){
+        ThreadContext* currentThread = job->threadContexts + i;
+        K2* currentKey = currentThread->intermediateVec->at(0).first;
+        if(currentKey == minKey){
+            IntermediateVec* currentVector = currentThread->intermediateVec;
+            IntermediatePair pair = currentVector->at(0);
+            currentVector->erase(currentVector->begin());
+            temp->push_back(pair);
+            INCREMENT_ALREADY_PROCESSED(*(job->atomicStage));  // TODO check where it's supposed to be
 
-            }
-        job->shuffeledVector->push_back(temp);
         }
+    job->shuffeledVector->push_back(temp);
     }
 }
 
