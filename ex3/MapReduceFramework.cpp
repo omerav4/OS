@@ -1,90 +1,118 @@
 #include "MapReduceFramework.h"
-#include "Resources (1)/Barrier/Barrier.h"
+#include "Barrier.h"
 #include <atomic>
 #include <iostream>
+#include <algorithm>
+#include <pthread.h>
 
 
 ///--------------------------------- macros -----------------------------------
-#define STAGE_MASK 0x3
 #define PROCESSED_KEYS_MASK(jobState) jobState&0x7fffffff
 #define JOB_STAGE(jobState) jobState & 0x3
 #define TOTAL_KEYS(jobState) jobState & 0x7fffffff
-#define INCREMENT_ALREADY_PROCESSED(jobState) ((jobState).fetch_add(1 << 2))
-#define ERROR_MESSAGE_ALLOCATION_FAILURE "system error: allocation failure\n"
+#define INCREMENT_BY_ONE(jobState) ((jobState).fetch_add(1 << 2))
+#define INCREMENT_BY_VALUE(jobState, value) ((jobState).fetch_add(value << 2))
 
+#define ERROR_MESSAGE_ALLOCATION_FAILURE "system error: allocation failure\n"
+#define ERROR_MESSAGE_PTHREAD_FAILURE "system error: pthread creation failed\n"
+#define JOIN_FAILURE "system error: pthread join  failed\n"
+#define MUTEX_UNLOCK_FAILURE "system error: mutex unlock  failed\n"
+#define MUTEX_LOCK_FAILURE "system error: mutex lock  failed\n"
+#define MUTEX_DESTROY_ERR "system error: [[Barrier]] error on pthread_mutex_destroy"
 ///-------------------------------- typedefs ----------------------------------
 typedef std::atomic<int> atomicIntCounter;
 
 // two least significant bits are for STAGE enum representation
 // next 31 bits are for already processed keys
 // last 31 bits are for
-typedef std::atomic<uint64_t> atomicJobStage;
-typedef std::vector<IntermediateVec*> shuffeledVector;
+typedef std::atomic<uint64_t> atomicJobStage;   // TODO - maybe delete
+typedef std::vector<IntermediateVec> ShuffledVector;
 typedef struct JobContext JobContext;
 typedef struct ThreadContext ThreadContext;
 
-// TODO describe
+/**
+ *
+ */
 struct ThreadContext{
+    int id;
     JobContext* job;
     pthread_t* thread;
     IntermediateVec* intermediateVec;
 };
 
-// TODO describe
+/**
+ *
+ */
 struct JobContext{
-    ThreadContext* threadContexts;
-    JobState state;
+    // given by user
+    MapReduceClient const *client;
+    Barrier* barrier;
     int multiThreadLevel;
-    bool isJoined;
-
-    InputVec* inputVec;
+    const InputVec* inputVec;
     OutputVec* outputVec;
 
-    pthread_mutex_t* mutex;
-    Barrier* barrier;
-    MapReduceClient const *client;
-
-    atomicIntCounter* intermediateCounter;
-    atomicIntCounter* outputCounter;
-    atomicIntCounter* inputCounter;
-
-    atomicJobStage* atomicStage;
-    shuffeledVector* shuffeledVector;
+    // independent fields
+    ThreadContext* threadContexts;
+    int processedKeys;   /// TODO - should be atomic?
+    JobState state;   /// TODO should we change to an atomic var?
+    atomicIntCounter* indexCounter;  //
+    std::atomic<int> nextPhaseInputSize; //
+    pthread_mutex_t mutex; //
+    pthread_mutex_t emitMutex;  /// TODO - is possible with one mutex?
+    bool isJoined;  //
+    ShuffledVector shuffledVec; // vector of vectors for shuffle phase
+    ShuffledVector vecToReduce; // vector of vectors for reduce phase
 };
 
 ///-------------------------------- free resources ------------------------------------
-
+/**
+ *
+ * @param threads
+ * @param len
+ */
 void freeThreadContexts(ThreadContext* threads, int len) {
     for(int i = 0; i < len; i++) {
         delete (threads + i) ->intermediateVec;
+        delete (threads + i)->thread;
+        /// TODO do we need to delete pthread?
     }
 }
-
+/**
+ *
+ * @param job
+ */
 void freeJobContext(JobContext* job) {
     freeThreadContexts(job->threadContexts, job->multiThreadLevel);
-    delete job->shuffeledVector;
+    delete job->indexCounter;
     delete job->barrier;
-    delete job->atomicStage;
-    if (pthread_mutex_destroy(job->mutex) != 0) {
-        fprintf(stderr, "[[Barrier]] error on pthread_mutex_destroy");
+    if (pthread_mutex_destroy(&job->mutex) != 0) {
+        std::cerr << MUTEX_DESTROY_ERR;
         exit(EXIT_FAILURE);
     }
 }
 
 ///-------------------------------- create structs ------------------------------------
-// TODO describe
-ThreadContext* createThreadContext(JobContext* jobContext)
+/**
+ *
+ * @param jobContext
+ * @param id
+ * @return
+ */
+ThreadContext* createThreadContext(JobContext* jobContext, int id)
 {
-    ThreadContext* threadContext = new (std::nothrow) ThreadContext;
-    if (!threadContext) {
+    auto* threadContext = new (std::nothrow) ThreadContext;
+    if (!threadContext)
+    {    // allocation failed
         std::cerr << ERROR_MESSAGE_ALLOCATION_FAILURE << std::endl;
         exit(EXIT_FAILURE);
     }
     threadContext->thread = new (std::nothrow) pthread_t;
     threadContext->intermediateVec = new (std::nothrow) IntermediateVec;
     threadContext->job = jobContext;
+    threadContext->id = id;
 
-    if (!threadContext->thread || !threadContext->intermediateVec) {
+    if (!threadContext->thread || !threadContext->intermediateVec)
+    {   // allocation failed
         delete threadContext->thread;
         delete threadContext->intermediateVec;
         delete threadContext;
@@ -94,10 +122,17 @@ ThreadContext* createThreadContext(JobContext* jobContext)
     return threadContext;
 }
 
-// TODO describe
-JobContext* createJobContext(ThreadContext* threads, int multiThreadLevel,
-                             InputVec* inputVec, OutputVec* outputVec,
-                             const MapReduceClient& client)
+/**
+ *
+ * @param threads
+ * @param multiThreadLevel
+ * @param inputVec
+ * @param outputVec
+ * @param client
+ * @return
+ */
+JobContext* createJobContext(ThreadContext* threads, int multiThreadLevel, const InputVec& inputVec,
+                             OutputVec& outputVec, const MapReduceClient& client)
 {
     JobContext* jobContext = new (std::nothrow) JobContext;
     if (!jobContext) {
@@ -107,140 +142,179 @@ JobContext* createJobContext(ThreadContext* threads, int multiThreadLevel,
     jobContext->multiThreadLevel = multiThreadLevel;
     jobContext->threadContexts = threads;
     jobContext->client = &client;
-    jobContext->inputVec = inputVec;
-    jobContext->outputVec = outputVec;
+    jobContext->inputVec = &inputVec;
+    jobContext->outputVec = &outputVec;
+    jobContext->processedKeys = 0;
 
-    jobContext->shuffeledVector = new (std::nothrow) shuffeledVector;
-    jobContext->atomicStage = new (std::nothrow) atomicJobStage;
-    jobContext->barrier = new Barrier(multiThreadLevel);
+    jobContext->shuffledVec =  ShuffledVector(multiThreadLevel);
+    jobContext->barrier = new Barrier(multiThreadLevel);;
+    jobContext->indexCounter = new (std::nothrow) atomicIntCounter;
+
     jobContext->mutex = pthread_mutex_t(PTHREAD_MUTEX_INITIALIZER);
+    jobContext->emitMutex = pthread_mutex_t(PTHREAD_MUTEX_INITIALIZER);
 
-    // TODO need the counters?
-    jobContext->outputCounter = new (std::nothrow) atomicIntCounter;
-    jobContext->inputCounter = new (std::nothrow) atomicIntCounter;
+    jobContext->shuffledVec = std::vector<IntermediateVec>(multiThreadLevel);
+    jobContext->vecToReduce = std::vector<IntermediateVec>();
+    jobContext->nextPhaseInputSize = 0;
 
     // Check for allocation failures
-    if (!jobContext->mutex || !jobContext->barrier || !jobContext->outputCounter || !jobContext->inputCounter ||
-        !jobContext->atomicStage || !jobContext->shuffeledVector) {
-        freeThreadContexts(threads, multiThreadLevel);
-        delete jobContext->shuffeledVector;
-        delete jobContext->atomicStage;
-        delete jobContext->inputCounter;
-        delete jobContext->outputCounter;
-        delete jobContext->barrier;
-        delete jobContext->mutex;
-        delete jobContext;
+    if ( !jobContext->barrier || !jobContext->indexCounter) {
+        freeJobContext(jobContext);
         }
-    }
+    return jobContext;
+}
+
+///-------------------------- check and update stage --------------------------
+
+
 
 ///-------------------------------- phases ------------------------------------
-int checkStage(JobContext* job)
-{
-    auto state = (*(job->atomicStage)).load();
-    return STAGE_MASK(state);
-}
-
-void updateStage(JobContext* job, int stage){
-    int atomicStage = (*(job->atomicStage)).load();
-    atomicStage &= ~(JOB_STAGE(atomicStage));  // Clear the existing stage bits
-    atomicStage |= JOB_STAGE(stage);  // Set the new stage bits
-    (*(job->atomicStage)).store(atomicStage); // Save the new stage
-}
-
+/**
+ *
+ * @param thread
+ * @param job
+ */
 void mapPhase(ThreadContext* thread, JobContext* job)
 {
-    InputVec *inputVec = job->inputVec;
-    if (checkStage(job) == UNDEFINED_STAGE)
+    pthread_mutex_lock(&job->mutex);
+    if (job->state.stage == UNDEFINED_STAGE)
     {
-        updateStage(job, MAP_STAGE);
+        auto stage = MAP_STAGE;
+        job->state.stage = stage;
     }
-    int inputVecSize = inputVec->size();
-    atomicIntCounter index = (*(job->inputCounter))++;        // TODO check if it's supposed to be thread
+    pthread_mutex_unlock(&job->mutex);
+    unsigned long inputVecSize = job->inputVec->size();
+    uint index = (*(job->indexCounter))++;
     while (index < inputVecSize)
     {
-        auto pair = inputVec->at(index);
-        job->client->map(pair.first, pair.second, job);
-        (*(job->atomicStage)).fetch_add(1 << 31);
-        index = (*(job->inputCounter))++;
+        auto pair = job->inputVec->at(index);
+        job->client->map(pair.first, pair.second, thread);
+        //INCREMENT_BY_ONE(*(job->atomicStage));
+        pthread_mutex_lock(&job->mutex); // TODO handle if error
+        job->processedKeys += 1;
+        job->state.percentage =  100 * ((float) job->processedKeys /(float) inputVecSize);
+        pthread_mutex_unlock(&job->mutex); // TODO handle if error
+        index = (*(job->indexCounter))++;
     }
 }
-
+/**
+ *
+ * @param pair1
+ * @param pair2
+ * @return
+ */
 bool compare(IntermediatePair pair1, IntermediatePair pair2){
-    return pair1.first < pair2.first
+    return pair1.first->operator<(*pair2.first);
 }
 
-void sortPhase(ThreadContext* thread){
-    std::sort(thread->intermediateVec->begin(),thread->intermediateVec->end(), compare);
+bool compareVec(std::vector<std::pair<K2 *, V2 *>> vec1,std::vector<std::pair<K2 *, V2 *>> vec2){
+    return vec1[0].first->operator<(*vec2[0].first);
 }
 
-void shufflePhase(ThreadContext* thread, JobContext* job){
-    K2* minKey;
-    if(checkStage(job) == MAP_STAGE){
-        updateStage(job, SHUFFLE_STAGE);
-    }
-
-    // checks if all intermediate vectors are empty
-    for (int i = 0; i < job->multiThreadLevel; i++){
-        if (minKey == nullptr){
-            minKey = thread->intermediateVec->at(0).first;
-        }
-        else{
-            break;
-        }
-    }
-    if (minKey == nullptr){
-        return;
-    }
-
-    int multiThreadLevel = job->multiThreadLevel;
-    bool empty = true;
-    while(true)
+void shufflePhase(JobContext* job){
+    pthread_mutex_lock(&(job->mutex)); //TODO handle if error
+    job->processedKeys = 0;
+    job->state = {SHUFFLE_STAGE, 0};
+    pthread_mutex_unlock(&(job->mutex)); //TODO handle if error
+    IntermediateVec allThreadVec;
+    for(const IntermediateVec& vec: (job->shuffledVec))
     {
-        // find the minimal key
-        for (int i = 0; i < multiThreadLevel; i++)
-        {
-            ThreadContext* currentThread = job->threadContexts + i;
-            K2* currentKey = currentThread->intermediateVec->at(0).first;
-            if(currentKey == nullptr){
-                continue;
-            }
-            else if(currentKey < minKey){
-                minKey = currentKey;
-            }
-            empty = false;
-        }
-        if(empty){
-            break;
-        }
+        allThreadVec.insert(allThreadVec.end(), vec.begin(), vec.end()); // combine  threads' vectors
     }
-    IntermediateVec* temp = new IntermediateVec();
-    for(int i = 0; i < multiThreadLevel; i++){
-        ThreadContext* currentThread = job->threadContexts + i;
-        K2* currentKey = currentThread->intermediateVec->at(0).first;
-        if(currentKey == minKey){
-            IntermediateVec* currentVector = currentThread->intermediateVec;
-            IntermediatePair pair = currentVector->at(0);
-            currentVector->erase(currentVector->begin());
-            temp->push_back(pair);
-            INCREMENT_ALREADY_PROCESSED(*(job->atomicStage));  // TODO check where it's supposed to be
+    if(!allThreadVec.empty())
+    {
+        std::sort(allThreadVec.begin(), allThreadVec.end(), compare);
 
-        }
-    job->shuffeledVector->push_back(temp);
+        IntermediatePair prev_pair = {nullptr, nullptr};
+        IntermediatePair curr_pair;
+
+        while(!allThreadVec.empty()){
+            curr_pair = allThreadVec.back();
+            if (prev_pair.first == nullptr || (prev_pair.first != nullptr && (compare(curr_pair, prev_pair)
+            || compare(prev_pair, curr_pair)))) // we are in the first pair or a pair with new key
+            {
+                IntermediateVec new_vec = IntermediateVec();  // creat vec for cur key
+                job->vecToReduce.insert(job->vecToReduce.begin(), new_vec);  // insert to reduce vec
+            }
+            job->vecToReduce[0].push_back(curr_pair);  // cur pair has the same key of recently created vec
+            prev_pair = curr_pair;  // update
+            allThreadVec.pop_back();  // pop all
+
+            job->processedKeys++;
+            job->state.percentage = 100 * (float)(job->processedKeys) /  (float)(job->nextPhaseInputSize);
+    }
+//    K2* maxKey;
+//
+//    int multiThreadLevel = job->multiThreadLevel;
+//    // checks if all intermediate vectors are empty
+//    for (int i = 0; i < multiThreadLevel; i++){
+//        maxKey = (job->threadContexts+i)->intermediateVec->back().first;
+//        if (maxKey != nullptr) {
+//            break;
+//        }
+//    }
+//    if (maxKey == nullptr){
+//        return;
+//    }
+//
+//    bool empty = true;
+//    while(true)
+//    {
+//        // checks for the maximum key
+//        for (int i = 0; i < multiThreadLevel; i++)
+//        {
+//            ThreadContext* currentThread = job->threadContexts + i;
+//            K2* currentKey = currentThread->intermediateVec->back().first;
+//            if(currentKey == nullptr){
+//                continue;
+//            }
+//            else if(currentKey > maxKey){
+//                maxKey = currentKey;
+//            }
+//            empty = false;
+//        }
+//        if(empty){
+//            break;
+//        }
+//
+//        // create a vector of the values of the maximal key, adds it to the temp vector, and adds the temp vector
+//        // to the shuffledVec of the job
+//        auto temp = new IntermediateVec();
+//        for(int i = 0; i < multiThreadLevel; i++) {
+//            ThreadContext *currentThread = job->threadContexts + i;
+//            IntermediateVec *currentVec = currentThread->intermediateVec;
+//            K2 *currentKey = currentVec->back().first;
+//            if (currentKey == maxKey) {
+//                IntermediatePair pair = currentVec->back();
+//                currentVec->erase(currentVec->end());
+//                temp->push_back(pair);
+//                //INCREMENT_BY_ONE(*(job->atomicStage));
+//            }
+//        }
+//        job->shuffledVec->push_back(temp);
+//        job->processedKeys++;
+//        job->state.percentage = 100 * (float) job->processedKeys / (float) job->inputVec->size();
+//        job->processedKeys = 0;
+//
     }
 }
 
-void reducePhase(JobContext* job){
-    shuffeledVector* shuffeledVector = job->shuffeledVector;
-    if(checkStage(job) == SHUFFLE_STAGE || checkStage(job) == MAP_STAGE){
-        updateStage(job, REDUCE_STAGE);
-    }
-    int shuffeledVecSize = shuffeledVector->size();
-    atomicIntCounter index = (*(job->outputCounter))++;              // TODO check if it's supposed to be thread
-    while (index < shuffeledVecSize){
-        auto currentVector = shuffeledVector->at(index);
-        job->client->reduce(currentVector, job);
-        (*(job->atomicStage)).fetch_add(currentVector->size() <<31);
-        index = (*(job->outputCounter))++;
+void reducePhase(ThreadContext* threadContext){
+    JobContext* job = threadContext->job;
+    unsigned long vecToReduceSize = job->vecToReduce.size();
+    unsigned long inputVecSize = job->inputVec->size();
+//    std::sort(job->vecToReduce.begin(), job->vecToReduce.end(), compareVec);
+    uint index = (*(job->indexCounter))++;
+    while (index < vecToReduceSize){
+        auto currentVector = (job->vecToReduce)[index];
+        job->client->reduce(&currentVector, threadContext);
+//        INCREMENT_BY_VALUE(*(job->atomicStage), currentVector->size());
+
+        pthread_mutex_lock(&job->mutex); // TODO handle if error
+        job->processedKeys += (int)currentVector.size();
+        job->state.percentage =  100 * ((float) job->processedKeys /(float) job->nextPhaseInputSize);  //TODO - like this or input?
+        pthread_mutex_unlock(&job->mutex); // TODO handle if error
+        index = (*(job->indexCounter))++;
     }
 }
 
@@ -249,104 +323,113 @@ void waitForAllThreads(JobContext* job){
     job->barrier->barrier();
 }
 
-void* mapReduce(ThreadContext* thread){
-    ThreadContext* threadContext = (ThreadContext*) thread;
-    JobContext* job = threadContext->job;
+void* mapReduce(void* context){
+    auto thread = (ThreadContext*) context;
+    JobContext* job = thread->job;
     mapPhase(thread, job);
-    sortPhase(thread);
+    std::sort((job->shuffledVec)[thread->id].begin(), job->shuffledVec[thread->id].end(), compare);
     waitForAllThreads(job);  // verify all threads finished map & sort
+
+    if(thread->id == 0){
+        shufflePhase(job);;
+        pthread_mutex_lock(&(job->mutex));// TODO handle error
+        job->processedKeys = 0;
+        job->state = {REDUCE_STAGE, 0};
+        job->indexCounter->store(0);
+        pthread_mutex_unlock(&(job->mutex));    // TODO handle error
+    }
+
     waitForAllThreads(job);  // verify thread 0 finished shuffle
-    reducePhase(job);
+
+    reducePhase(thread);
+//    pthread_mutex_lock(&(job->mutex));  // TODO remove
+//    job->state = {REDUCE_STAGE, 100};  //TODO remive
+//    pthread_mutex_unlock(&(job->mutex));
+    return nullptr;
 }
 
-void* mapShuffleReduce(ThreadContext* thread, JobContext* job){
-    mapPhase(thread, job);          // TODO make sure that mapPhase gets the job as a parameter in pthread_init
-    sortPhase(thread);
-    waitForAllThreads(job);
-    // set to zero percentage counter
-    (*(job->atomicStage)) = *(job->atomicStage) & (3 << 62);    // TODO set to zero percentage counter?!
-    // TODO shuffle counter??????
-    shufflePhase(thread, job);
-    waitForAllThreads(job);         // TODO needed?
-    reducePhase(job);
-}
 
 ///------------------------------------------- library -------------------------------------------------------
 
-void emit2 (K2* key, V2* value, void* context){
+void emit2 (K2* key, V2* value, void* context)
+{
     auto threadContext = (ThreadContext*) context;
+    auto job = threadContext->job;
+    int result = pthread_mutex_lock(&job->emitMutex);
+    if(result!=0){
+        std::cerr <<MUTEX_LOCK_FAILURE;
+        exit(EXIT_FAILURE);
+    }
     IntermediatePair pair = IntermediatePair(key, value);
-    threadContext->intermediateVec->push_back(pair);
-    (*(threadContext->intermediateCounter))++;
+    (job->shuffledVec)[threadContext->id].push_back(pair);
+    result = pthread_mutex_unlock(&job->emitMutex);
+    if(result!=0){
+        std::cerr <<MUTEX_UNLOCK_FAILURE;
+        exit(EXIT_FAILURE);
+    }
+    job->nextPhaseInputSize++;
+    //INCREMENT_BY_ONE(*(threadContext->job->atomicStage));
+
 }
 
 void emit3 (K3* key, V3* value, void* context){
     auto threadContext = (ThreadContext*) context;
+    auto job = threadContext->job;
+    int result = pthread_mutex_lock(&job->emitMutex);
+    if(result!=0){
+        std::cerr <<MUTEX_LOCK_FAILURE;
+        exit(EXIT_FAILURE);
+    }
     OutputPair pair = OutputPair(key, value);
-    pthread_mutex_lock(threadContext->mutex);
-    // TODO handle if error
-    threadContext->outputVec->push_back(pair);
-    pthread_mutex_unlock(threadContext->mutex);
-    // TODO handle if error
-    (*(threadContext->outputCounter))++;
+    job->outputVec->push_back(pair);
+    result = pthread_mutex_unlock(&job->emitMutex);
+    if(result!=0){
+        std::cerr <<MUTEX_UNLOCK_FAILURE;
+        exit(EXIT_FAILURE);
+    }
+//    INCREMENT_BY_VALUE(*(job->atomicStage), currentVector->size());
 }
 
 JobHandle startMapReduceJob(const MapReduceClient& client,
-                            const InputVec& inputVec, OutputVec& outputVec,
-                            int multiThreadLevel){
-    ThreadContext* threads = new(std::nothrow) ThreadContext[multiThreadLevel];
+                            const InputVec& inputVec, OutputVec& outputVec, int multiThreadLevel)
+{
+    auto* threads = new(std::nothrow) ThreadContext[multiThreadLevel];
 
-    JobContext* jobContext = createJobContext(threads, multiThreadLevel,
-                                              inputVec, outputVec, client);
+    JobContext* jobContext = createJobContext(threads, multiThreadLevel, inputVec, outputVec, client);
     for(int i = 0; i < multiThreadLevel; i++){
-        if (i == 0){
-            int result = pthread_create(threads[i].thread, nullptr, mapShuffleReduce,
-                                        threads[0]);
-            //TODO handle result- not 0 = error
-        }
-        else{
-            int result = pthread_create(threads[i].thread, nullptr, mapReduce,
-                                        threads[i]);
-            //TODO handle result- not 0 = error
+        threads[i] = *createThreadContext(jobContext, i);
+        int result = pthread_create((threads + i)->thread, nullptr,mapReduce, threads +i);
+        if(result !=0){
+            std::cerr <<ERROR_MESSAGE_PTHREAD_FAILURE;
+            exit(EXIT_FAILURE);
         }
     }
-
     return jobContext;
 }
 
 void waitForJob(JobHandle job){
-    auto jobContext = (JobContext*) job;
+    auto jobContext = static_cast<JobContext*>(job);
     if (!jobContext->isJoined){
+        jobContext->isJoined = true;
         for(int i = 0; i < jobContext->multiThreadLevel; i++){
             int result = pthread_join(*jobContext->threadContexts[i].thread, nullptr);
             if (result != 0)
             {
-                // TODO Error handling if pthread_join fails
+                std::cerr <<JOIN_FAILURE;
+                exit(EXIT_FAILURE);
             }
         }
     }
 }
+
 void getJobState(JobHandle job, JobState* state){
-    auto jobContext = ((JobContext*) job);
-    auto state = (*(jobContext->atomicStage)).load()
-    stage_t stage = JOB_STAGE(state);
-    float percentage = (float)PROCESSED_KEYS_MASK(state) /
-            (float)TOTAL_KEYS(state);
-    state->stage = stage;
-    state->percentage = percentage;
+    auto jobContext = static_cast<JobContext*>(job);
+    state->stage = jobContext->state.stage;
+    state->percentage = jobContext->state.percentage;
 }
 void closeJobHandle(JobHandle job){
     waitForJob(job);
-    auto jobContext = (JobContext*) job;
-    for(int i = 0; i < jobContext->multiThreadLevel; i++){
-        delete jobContext->threadContexts[i].thread;
-    }
-    delete jobContext->threadContexts;
-    delete jobContext;
-    //TODO free all the resources
+    auto jobContext = static_cast<JobContext*>(job);
+    freeJobContext(jobContext);
 }
 
-void freeResources(jobContext* job)
-{
-    //TODO free all the resources
-}
