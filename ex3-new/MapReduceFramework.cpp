@@ -166,7 +166,7 @@ JobContext* createJobContext(ThreadContext* threads, int multiThreadLevel, const
     jobContext->inputVec = &inputVec;
     jobContext->outputVec = &outputVec;
 
-    jobContext->atomicStage = new (std::nothrow) atomicJobStage;
+    jobContext->atomicStage = new (std::nothrow) atomicJobStage(0);
 
     jobContext->processedKeys = 0;
 
