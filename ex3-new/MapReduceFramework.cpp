@@ -200,11 +200,17 @@ stage_t getStage(JobContext* job)
 // left  2 bits     31 bits            31 bits          right
         // stage    total keys      processed keys
 void updateNewStage(JobContext* job, int stage, int total){
-    uint64_t jobStageBits = static_cast<uint64_t>(stage) << 62;
-    uint64_t totalKeysBits = (static_cast<uint64_t>(total) & (0x7fffffffULL)) << 31;
-    uint64_t processedKeysBits = ~(0x7fffffffULL);
-    uint64_t updatedNumber = (jobStageBits | totalKeysBits) & processedKeysBits;
-    (*(job->atomicStage)).store(updatedNumber); // Save the new stage
+//    uint64_t jobStageBits = static_cast<uint64_t>(stage) << 62;
+//    uint64_t totalKeysBits = (static_cast<uint64_t>(total) & (0x7fffffffULL)) << 31;
+//    uint64_t processedKeysBits = ~(0x7fffffffULL);
+//    uint64_t updatedNumber = (jobStageBits | totalKeysBits) & processedKeysBits;
+//    (*(job->atomicStage)).store(updatedNumber); // Save the new stage
+
+    uint64_t newStage = static_cast<uint64_t>(stage) << 62;
+    newStage |= ((total & (0x7fffffffULL)) << 31);
+    newStage &= ~(0x7fffffffULL);
+    job->atomicStage->store(newStage);
+
 }
 
 void incrementProcessedKeysBy(JobContext* job, int factor){
@@ -264,7 +270,7 @@ void mapPhase(ThreadContext* thread, JobContext* job)
 {
     unsigned long totalKeys = job->inputVec->size();
     if (getStage(job) == UNDEFINED_STAGE) {updateNewStage(job, MAP_STAGE, totalKeys);}
-    printf("stage %d percentage %f\n", getStage(job), getPercentage(job));
+    std::cout << "stage: " << getStage(job) << ", percentage: " << getPercentage(job);
     int index = getProcessedKeysCounter(job);
     while (index < totalKeys)
     {
