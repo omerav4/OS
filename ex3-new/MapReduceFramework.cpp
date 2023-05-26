@@ -245,7 +245,7 @@ float getPercentage(JobContext* job){
     }
     std::bitset<64> bitset((processedKeys / totalKeys));
     std::cout << "total " << bitset << "\n";
-    float percentage = static_cast<float>(processedKeys / totalKeys) * 100.0f;
+    float percentage = static_cast<float>(processedKeys) /  static_cast<float>(totalKeys)* 100.0f;
     return percentage;
 }
 
