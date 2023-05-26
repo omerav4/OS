@@ -190,19 +190,19 @@ TEST(MattanTests, waitAndCloseTest) {
   closeJobHandle(job);
 
 }
-//TEST(MattanTests, errorMessageTest) {
-//	CounterClient client;
-//	auto s1 = new VString("This string is full of characters");
-//	auto s2 = new VString("Multithreading is awesome");
-//	auto s3 = new VString("conditions are race bad");
-//	client.inputVec.push_back({nullptr, s1});
-//	client.inputVec.push_back({nullptr, s2});
-//	client.inputVec.push_back({nullptr, s3});
-//	ASSERT_EXIT(startMapReduceJob(client, client.inputVec, client.outputVec, 20000000),
-//	            ::testing::ExitedWithCode(1),
-//	            ::testing::MatchesRegex("system error: .*\n")
-//	) << "When starting too many threads, thread creation should fail, causing program to exit with code 1 and print an error";
-//}
+TEST(MattanTests, errorMessageTest) {
+	CounterClient client;
+	auto s1 = new VString("This string is full of characters");
+	auto s2 = new VString("Multithreading is awesome");
+	auto s3 = new VString("conditions are race bad");
+	client.inputVec.push_back({nullptr, s1});
+	client.inputVec.push_back({nullptr, s2});
+	client.inputVec.push_back({nullptr, s3});
+	ASSERT_EXIT(startMapReduceJob(client, client.inputVec, client.outputVec, 20000000),
+	            ::testing::ExitedWithCode(1),
+	            ::testing::MatchesRegex("system error: .*\n")
+	) << "When starting too many threads, thread creation should fail, causing program to exit with code 1 and print an error";
+}
 
 TEST(MattanTests, outputTest) {
   CounterClient client;
