@@ -168,7 +168,6 @@ JobContext* createJobContext(ThreadContext* threads, int multiThreadLevel, const
     jobContext->outputVec = &outputVec;
 
     jobContext->atomicStage = new (std::nothrow) atomicJobStage(0);
-//    std::cout << "start " << jobContext->atomicStage->load() << "\n" << std::endl;
 
     jobContext->processedKeys = 0;
 
@@ -207,17 +206,12 @@ void updateNewStage(JobContext* job, int stage, int total){
     uint64_t updatedNumber = (jobStageBits | totalKeysBits) & processedKeysBits;
     (*(job->atomicStage)).store(updatedNumber); // Save the new stage
     std::bitset<64> bitset(updatedNumber);
-    std::cout << "after update new stage" << bitset << "\n";
-
-
 }
 
 void incrementProcessedKeysBy(JobContext* job, int factor){
     uint64_t number = job->atomicStage->load();
 
     std::bitset<64> bitset(number);
-    std::cout << "number before increment " << bitset << "\n";
-    std::cout << "factor " << factor << "\n";
 
     uint64_t processedKeysMask = 0x7fffffffULL;  // Mask for the processed keys (31 bits set to 1)
     uint64_t processedKeys = (number & processedKeysMask);  // Extract the current processed keys
@@ -228,7 +222,6 @@ void incrementProcessedKeysBy(JobContext* job, int factor){
     (*(job->atomicStage)).store(number); // Save the new stage
 
     std::bitset<64> bitset2(number);
-    std::cout << "number after increment" << bitset2 << "\n";
 }
 
 float getPercentage(JobContext* job){
@@ -237,8 +230,6 @@ float getPercentage(JobContext* job){
 //    std::bitset<64> bitset(processedKeys);
 //    std::cout << "processed " << bitset << "\n";
     uint64_t totalKeys = (number << 2) >> 33;  // Extract the total keys
-//    std::bitset<64> bitset2(totalKeys);
-//    std::cout << "total " << bitset2 << "\n";
 
     if (totalKeys == 0) {
         // Handle the case where totalKeys is 0 to avoid division by zero
