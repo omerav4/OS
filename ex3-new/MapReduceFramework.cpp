@@ -265,14 +265,14 @@ void mapPhase(ThreadContext* thread, JobContext* job)
     int index = getProcessedKeysCounter(job);
     //std::cout << "total keys: " << (job) << ", percentage: " << getPercentage(job) << "\n";
 
-    while (index < totalKeys)
-    {
-        auto pair = job->inputVec->at(index);
-        job->client->map(pair.first, pair.second, thread);
-        incrementProcessedKeysBy(job, 1);
-        printf("stage %d percentage %f", getStage(job), getPercentage(job));
-        index = getProcessedKeysCounter(job);
-    }
+//    while (index < totalKeys)
+//    {
+//        auto pair = job->inputVec->at(index);
+//        job->client->map(pair.first, pair.second, thread);
+//        incrementProcessedKeysBy(job, 1);
+//        printf("stage %d percentage %f", getStage(job), getPercentage(job));
+//        index = getProcessedKeysCounter(job);
+//    }
 }
 /**
  * Represents the map phase of the job
