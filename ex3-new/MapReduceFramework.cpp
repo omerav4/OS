@@ -346,7 +346,9 @@ void* mapReduce(void* context){
     waitForAllThreads(job);  // verify all threads finished map & sort
 
     if(thread->id == 0) {shufflePhase(job);}
+    std::cout << "after shuffle, before barrier\n";
     waitForAllThreads(job);  // verify thread 0 finished shuffle
+    std::cout << "after shuffle, after barrier\n";
     reducePhase(thread);
     return nullptr;
 }
