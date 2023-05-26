@@ -209,6 +209,7 @@ void updateNewStage(JobContext* job, int stage, int total){
     uint64_t newStage = static_cast<uint64_t>(stage) << 62;
     newStage |= ((total & (0x7fffffffULL)) << 31);
     newStage &= ~(0x7fffffffULL);
+    std::cout << "newStage" << newStage << "\n";
     job->atomicStage->store(newStage);
 
 }
