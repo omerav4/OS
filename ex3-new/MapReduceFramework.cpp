@@ -215,17 +215,21 @@ void updateNewStage(JobContext* job, int stage, int total){
 void incrementProcessedKeysBy(JobContext* job, int factor){
     uint64_t number = job->atomicStage->load();
 
-//    std::bitset<64> bitset(number);
-//    std::cout << "number at increment" << bitset << "\n";
+    std::bitset<64> bitset(number);
+    std::cout << "number before increment" << bitset << "\n";
+
     uint64_t processedKeysMask = 0x7fffffffULL;  // Mask for the processed keys (31 bits set to 1)
     uint64_t processedKeys = (number & processedKeysMask);  // Extract the current processed keys
     processedKeys += factor;  // Increment the processed keys
+    std::bitset<64> bitset3(number);
+    std::cout << "number after adding factor" << bitset3 << "\n";
     processedKeys &= processedKeysMask;  // Apply the mask to keep the processed keys within the range
     number &= ~(processedKeysMask);  // Clear the current processed keys in the number
     number |= (processedKeys);  // Update the number with the incremented processed keys
     (*(job->atomicStage)).store(number); // Save the new stage
-//    std::bitset<64> bitset2(number);
-//    std::cout << "number after increment" << bitset2 << "\n";
+
+    std::bitset<64> bitset2(number);
+    std::cout << "number after increment" << bitset2 << "\n";
 }
 
 float getPercentage(JobContext* job){
@@ -321,11 +325,8 @@ void shufflePhase(JobContext* job){
  * @param job- the current job
  */
 void reducePhase(ThreadContext* threadContext){
-    std::cout << "start reduce\n";
     JobContext* job = threadContext->job;
-    std::cout << "before update stage\n";
     if (getStage(job) == SHUFFLE_STAGE) {updateNewStage(job, REDUCE_STAGE, job->nextPhaseInputSize);}
-    std::cout << "after update stage\n";
     unsigned long vecToReduceSize = job->vecToReduce.size();
     int index = getProcessedKeysCounter(job);
     while (index < vecToReduceSize){
