@@ -215,8 +215,8 @@ void updateNewStage(JobContext* job, int stage, int total){
 void incrementProcessedKeysBy(JobContext* job, int factor){
     uint64_t number = job->atomicStage->load();
 
-    std::bitset<64> bitset(number);
-    std::cout << "number at increment" << bitset << "\n";
+//    std::bitset<64> bitset(number);
+//    std::cout << "number at increment" << bitset << "\n";
     uint64_t processedKeysMask = 0x7fffffffULL;  // Mask for the processed keys (31 bits set to 1)
     uint64_t processedKeys = (number & processedKeysMask);  // Extract the current processed keys
     processedKeys += factor;  // Increment the processed keys
@@ -224,8 +224,8 @@ void incrementProcessedKeysBy(JobContext* job, int factor){
     number &= ~(processedKeysMask);  // Clear the current processed keys in the number
     number |= (processedKeys);  // Update the number with the incremented processed keys
     (*(job->atomicStage)).store(number); // Save the new stage
-    std::bitset<64> bitset2(number);
-    std::cout << "number after increment" << bitset2 << "\n";
+//    std::bitset<64> bitset2(number);
+//    std::cout << "number after increment" << bitset2 << "\n";
 }
 
 float getPercentage(JobContext* job){
