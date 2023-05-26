@@ -218,9 +218,9 @@ void updateNewStage(JobContext* job, int stage, int total){
 
 void incrementProcessedKeysBy(JobContext* job, int factor){
     uint64_t number = job->atomicStage->load();
-    std::cout << "startttt " << job->atomicStage->load() << "\n" << std::endl;
 
-    printf("load %llu\n", number);
+    std::bitset<64> bitset(number);
+    std::cout << "number at increment" << bitset << "\n";
 
     uint64_t processedKeysMask = 0x7fffffffULL;  // Mask for the processed keys (31 bits set to 1)
     uint64_t processedKeys = (number << 33) >> 33;  // Extract the current processed keys
@@ -229,6 +229,8 @@ void incrementProcessedKeysBy(JobContext* job, int factor){
     number &= ~(processedKeysMask << 31);  // Clear the current processed keys in the number
     number |= (processedKeys << 31);  // Update the number with the incremented processed keys
     (*(job->atomicStage)).store(number); // Save the new stage
+    std::bitset<64> bitset2(number);
+    std::cout << "number after increment" << bitset2 << "\n";
 }
 
 float getPercentage(JobContext* job){
@@ -264,19 +266,17 @@ void mapPhase(ThreadContext* thread, JobContext* job)
 {   std::cout << "Starting map" << "\n";
     unsigned long totalKeys = job->inputVec->size();
     if (getStage(job) == UNDEFINED_STAGE) {updateNewStage(job, MAP_STAGE, totalKeys);}
-    std::cout << "stage: " << getStage(job) << ", percentage: " << getPercentage(job) << "\n";
     int index = getProcessedKeysCounter(job);
-    exit(0);
-    //std::cout << "total keys: " << (job) << ", percentage: " << getPercentage(job) << "\n";
+    std::cout << "index: " << index << "\n";
 
-//    while (index < totalKeys)
-//    {
-//        auto pair = job->inputVec->at(index);
-//        job->client->map(pair.first, pair.second, thread);
-//        incrementProcessedKeysBy(job, 1);
-//        printf("stage %d percentage %f", getStage(job), getPercentage(job));
-//        index = getProcessedKeysCounter(job);
-//    }
+    while (index < totalKeys)
+    {
+        auto pair = job->inputVec->at(index);
+        job->client->map(pair.first, pair.second, thread);
+        incrementProcessedKeysBy(job, 1);
+        printf("stage %d percentage %f", getStage(job), getPercentage(job));
+        index = getProcessedKeysCounter(job);
+    }
 }
 /**
  * Represents the map phase of the job
