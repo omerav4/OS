@@ -1,0 +1,21 @@
+# ninja log v5
+0	37	1684849167551995000	googletest-prefix/src/googletest-stamp/googletest-mkdir	1ec0ba0f6638feaf
+0	37	1684849167551995000	/cs/usr/inbar.oren/CLionProjects/ex3New/cmake-build-debug/mattanTests/googletest-download/googletest-prefix/src/googletest-stamp/googletest-mkdir	1ec0ba0f6638feaf
+37	13636	1684849181151817000	googletest-prefix/src/googletest-stamp/googletest-download	3a95fd9d7e39273e
+37	13636	1684849181151817000	/cs/usr/inbar.oren/CLionProjects/ex3New/cmake-build-debug/mattanTests/googletest-download/googletest-prefix/src/googletest-stamp/googletest-download	3a95fd9d7e39273e
+13637	14610	0	googletest-prefix/src/googletest-stamp/googletest-update	e24191b12bf65610
+13637	14610	0	/cs/usr/inbar.oren/CLionProjects/ex3New/cmake-build-debug/mattanTests/googletest-download/googletest-prefix/src/googletest-stamp/googletest-update	e24191b12bf65610
+14610	14628	1684849182143759000	googletest-prefix/src/googletest-stamp/googletest-patch	bef5ae3b88d229c3
+14610	14628	1684849182143759000	/cs/usr/inbar.oren/CLionProjects/ex3New/cmake-build-debug/mattanTests/googletest-download/googletest-prefix/src/googletest-stamp/googletest-patch	bef5ae3b88d229c3
+14628	14652	1684849182167777000	googletest-prefix/src/googletest-stamp/googletest-configure	ac3500a2e3fbba42
+14628	14652	1684849182167777000	/cs/usr/inbar.oren/CLionProjects/ex3New/cmake-build-debug/mattanTests/googletest-download/googletest-prefix/src/googletest-stamp/googletest-configure	ac3500a2e3fbba42
+14652	14671	1684849182186804000	googletest-prefix/src/googletest-stamp/googletest-build	6558a0bf398af8e9
+14652	14671	1684849182186804000	/cs/usr/inbar.oren/CLionProjects/ex3New/cmake-build-debug/mattanTests/googletest-download/googletest-prefix/src/googletest-stamp/googletest-build	6558a0bf398af8e9
+14671	14689	1684849182204738000	googletest-prefix/src/googletest-stamp/googletest-install	1a7525392e126c8e
+14671	14689	1684849182204738000	/cs/usr/inbar.oren/CLionProjects/ex3New/cmake-build-debug/mattanTests/googletest-download/googletest-prefix/src/googletest-stamp/googletest-install	1a7525392e126c8e
+14689	14708	1684849182223746000	googletest-prefix/src/googletest-stamp/googletest-test	4dbdf0b2b178b11c
+14689	14708	1684849182223746000	/cs/usr/inbar.oren/CLionProjects/ex3New/cmake-build-debug/mattanTests/googletest-download/googletest-prefix/src/googletest-stamp/googletest-test	4dbdf0b2b178b11c
+14708	14727	1684849182242771000	CMakeFiles/googletest-complete	8f7dd243da991817
+14708	14727	1684849182242771000	googletest-prefix/src/googletest-stamp/googletest-done	8f7dd243da991817
+14708	14727	1684849182242771000	/cs/usr/inbar.oren/CLionProjects/ex3New/cmake-build-debug/mattanTests/googletest-download/CMakeFiles/googletest-complete	8f7dd243da991817
+14708	14727	1684849182242771000	/cs/usr/inbar.oren/CLionProjects/ex3New/cmake-build-debug/mattanTests/googletest-download/googletest-prefix/src/googletest-stamp/googletest-done	8f7dd243da991817
