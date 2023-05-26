@@ -211,8 +211,8 @@ void updateNewStage(JobContext* job, int stage, int total){
 //    newStage &= ~(0x7fffffffULL);
     std::bitset<64> bitset(updatedNumber);
 
-    std::cout << "newStage" << bitset << "\n";
-    job->atomicStage->store(newStage);
+//    std::cout << "newStage" << bitset << "\n";
+//    job->atomicStage->store(newStage);
 
 }
 
