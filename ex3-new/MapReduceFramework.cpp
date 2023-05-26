@@ -207,7 +207,7 @@ void updateNewStage(JobContext* job, int stage, int total){
 }
 
 void incrementProcessedKeysBy(JobContext* job, int factor){
-    printf("hi2");
+    printf("hi2\n");
     uint64_t number = (*(job->atomicStage)).load();
     uint64_t processedKeysMask = 0x7fffffffULL;  // Mask for the processed keys (31 bits set to 1)
     uint64_t processedKeys = (number << 33) >> 33;  // Extract the current processed keys
@@ -248,13 +248,14 @@ void mapPhase(ThreadContext* thread, JobContext* job)
 {
     unsigned long totalKeys = job->inputVec->size();
     if (getStage(job) == UNDEFINED_STAGE) {updateNewStage(job, MAP_STAGE, totalKeys);}
-    printf("stage %d percentage %f", getStage(job), getPercentage(job));
+    printf("stage %d percentage %f\n", getStage(job), getPercentage(job));
     int index = getProcessedKeysCounter(job);
     while (index < totalKeys)
     {
-        printf("hi");
+        printf("hi\n");
         auto pair = job->inputVec->at(index);
         job->client->map(pair.first, pair.second, thread);
+        printf("hi3\n");
         incrementProcessedKeysBy(job, 1);
         printf("stage %d percentage %f", getStage(job), getPercentage(job));
         index = getProcessedKeysCounter(job);
