@@ -26,7 +26,7 @@ typedef std::atomic<int> atomicIntCounter;
 // two least significant bits are for STAGE enum representation
 // next 31 bits are for already processed keys
 // last 31 bits are for total keys
-typedef std::atomic<uint64_t> atomicJobStage;   // TODO - maybe delete
+typedef std::atomic<uint64_t> atomicJobStage;
 typedef std::vector<IntermediateVec> ShuffledVector;
 typedef struct JobContext JobContext;
 typedef struct ThreadContext ThreadContext;
@@ -62,10 +62,12 @@ struct JobContext{
     ShuffledVector shuffledVec; // vector of vectors for shuffle phase
     ShuffledVector vecToReduce; // vector of vectors for reduce phase
 
+    atomicJobStage* atomicStage;
     int processedKeys;   /// TODO - should be atomic?
     JobState state;   /// TODO should we change to an atomic var?
     atomicIntCounter* indexCounter;  //
     std::atomic<int> nextPhaseInputSize; //
+
     pthread_mutex_t mutex; //
     pthread_mutex_t emitMutex;  /// TODO - is possible with one mutex?
 };
@@ -91,6 +93,7 @@ void freeJobContext(JobContext* job) {
     freeThreadContexts(job->threadContexts, job->multiThreadLevel);
     delete job->indexCounter;
     delete job->barrier;
+    delete job->atomicStage;
     if (pthread_mutex_destroy(&job->mutex) != 0) {
         std::cerr << MUTEX_DESTROY_ERR;
         exit(EXIT_FAILURE);
@@ -162,7 +165,10 @@ JobContext* createJobContext(ThreadContext* threads, int multiThreadLevel, const
     jobContext->inputVec = &inputVec;
     jobContext->outputVec = &outputVec;
 
+    jobContext->atomicStage = new (std::nothrow) atomicJobStage;
+
     jobContext->processedKeys = 0;
+
     jobContext->shuffledVec =  ShuffledVector(multiThreadLevel);  //TODO - is this good?
     jobContext->indexCounter = new (std::nothrow) atomicIntCounter;
     jobContext->mutex = pthread_mutex_t(PTHREAD_MUTEX_INITIALIZER);
@@ -174,7 +180,7 @@ JobContext* createJobContext(ThreadContext* threads, int multiThreadLevel, const
     jobContext->nextPhaseInputSize = 0;
 
     // Check for allocation failures
-    if ( !jobContext->barrier || !jobContext->indexCounter) {
+    if ( !jobContext->barrier || !jobContext->indexCounter || !jobContext->atomicStage) {
         freeJobContext(jobContext);
         allocation_failure();
     }
@@ -182,8 +188,20 @@ JobContext* createJobContext(ThreadContext* threads, int multiThreadLevel, const
 }
 
 ///-------------------------- check and update stage --------------------------
+int checkStage(JobContext* job)
+{
+    auto state = (*(job->atomicStage)).load();
+    return JOB_STAGE(state);
+}
 
-
+// 2 bits     31 bits            31 bits
+// stage    total keys      processed keys
+void updateStage(JobContext* job, int stage, int total){
+    uint64_t jobStageBits = static_cast<uint64_t>(stage) << 62;
+    uint64_t totalKeysBits = static_cast<uint64_t>(total) << 31;
+    uint64_t updatedNumber = jobStageBits | totalKeysBits | 0;
+    (*(job->atomicStage)).store(updatedNumber); // Save the new stage
+}
 
 ///-------------------------------- phases ------------------------------------
 /**
