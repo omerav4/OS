@@ -206,8 +206,8 @@ void updateNewStage(JobContext* job, int stage, int total){
     uint64_t processedKeysBits = ~(0x7fffffffULL);
     uint64_t updatedNumber = (jobStageBits | totalKeysBits) & processedKeysBits;
     (*(job->atomicStage)).store(updatedNumber); // Save the new stage
-//    std::bitset<64> bitset(updatedNumber);
-//    std::cout << "newStage" << bitset << "\n";
+    std::bitset<64> bitset(updatedNumber);
+    std::cout << "after update new stage" << bitset << "\n";
 
 
 }
@@ -264,10 +264,9 @@ void mapPhase(ThreadContext* thread, JobContext* job)
         auto pair = job->inputVec->at(index);
         job->client->map(pair.first, pair.second, thread);
         incrementProcessedKeysBy(job, 1);
-        printf("stage %d percentage %f", getStage(job), getPercentage(job));
         index = getProcessedKeysCounter(job);
-        std::cout << "index: " << index << "\n";
     }
+    std::cout << "Finishing map" << "\n";
 }
 /**
  * Represents the map phase of the job
