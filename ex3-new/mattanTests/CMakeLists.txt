@@ -8,14 +8,14 @@ project(mattanTester VERSION 1.0 LANGUAGES C CXX)
 
 ## Download and unpack googletest at configure time
 configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
-execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" "../../../../Downloads/Exercise 03 Tests (mattan)/mattanTests"
-        RESULT_VARIABLE result
+execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+       RESULT_VARIABLE result
        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
 if(result)
    message(FATAL_ERROR "CMake step for googletest failed: ${result}")
 endif()
-execute_process(COMMAND ${CMAKE_COMMAND} --build "../../../../Downloads/Exercise 03 Tests (mattan)/mattanTests"
-        RESULT_VARIABLE result
+execute_process(COMMAND ${CMAKE_COMMAND} --build .
+       RESULT_VARIABLE result
        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
 if(result)
    message(FATAL_ERROR "Build step for googletest failed: ${result}")
@@ -27,7 +27,7 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 # Add googletest directly to our build. This defines
 # the gtest and gtest_main targets.
-add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
+add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-main
        ${CMAKE_CURRENT_BINARY_DIR}/googletest-build
        EXCLUDE_FROM_ALL)
 
@@ -42,12 +42,13 @@ endif()
 #######################################
 
 add_executable(mattanTester SampleClient.cpp)
-target_include_directories(mattanTester PRIVATE "../../../../Downloads/Exercise 03 Tests (mattan)")
+target_include_directories(mattanTester PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../)
 target_link_libraries(mattanTester PRIVATE MapReduceFramework gtest_main)
 
 
 set_property(TARGET mattanTester PROPERTY CXX_STANDARD 11)
-target_compile_options(mattanTester PUBLIC -Wall -Wextra)
+#target_compile_options(mattanTester PUBLIC -Wall -Wextra)
+target_compile_options(mattanTester PUBLIC)
 
-target_compile_definitions(mattanTester PUBLIC RANDOM_STRINGS_PATH="randomstring.txt")
+target_compile_definitions(mattanTester PUBLIC RANDOM_STRINGS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/randomstring.txt")
 

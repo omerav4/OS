@@ -1,5 +1,5 @@
 # osex3basicTest
-testerr for HUJI OS 2020 exercise 3
+tester for HUJI OS 2020 exercise 3
 ## Instructions:
 
 1. Clone this repository under the `mattanTests` directory by using the following command:
