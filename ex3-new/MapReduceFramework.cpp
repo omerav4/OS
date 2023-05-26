@@ -15,7 +15,7 @@
 
 #define ERROR_MESSAGE_ALLOCATION_FAILURE "system error: allocation failure\n"
 #define ERROR_MESSAGE_PTHREAD_FAILURE "system error: pthread creation failed\n"
-#define JOIN_FAILURE "system error: pthread join  failedddd\n"
+#define JOIN_FAILURE "system error: pthread join  failed\n"
 #define MUTEX_UNLOCK_FAILURE "system error: mutex unlock  failed\n"
 #define MUTEX_LOCK_FAILURE "system error: mutex lock  failed\n"
 #define MUTEX_DESTROY_ERR "system error: [[Barrier]] error on pthread_mutex_destroy"
@@ -456,8 +456,8 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 void waitForJob(JobHandle job){
     // if isJoined = true, while we are not 100% and not in reduce, so we will check each time
     auto jobContext = static_cast<JobContext*>(job);
-    std::cerr << "hiiii";
     if (!jobContext->isJoined){         // TODO change from atomic flag
+        jobContext->isJoined = true;
         for(int i = 0; i < jobContext->multiThreadLevel; i++){
             int result = pthread_join(*jobContext->threadContexts[i].thread, nullptr);
             if(result != 0)
