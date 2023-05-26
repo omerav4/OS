@@ -230,10 +230,12 @@ void incrementProcessedKeysBy(JobContext* job, int factor){
 
 float getPercentage(JobContext* job){
     uint64_t number =  (*(job->atomicStage)).load();
-    uint64_t processedKeys = number & 0x7fffffffULL;  // Extract the processed keys
+    uint64_t processedMask = (1ULL << 31) - 1;
+    uint64_t processedKeys = number & processedMask;  // Extract the processed keys
     std::bitset<64> bitset(processedKeys);
     std::cout << "processed " << bitset << "\n";
-    uint64_t totalKeys = (number >> 33) & 0x7fffffffULL;  // Extract the total keys
+    uint64_t totalMask = ((3ULL << 62) - 1) & ~ processedMask;
+    uint64_t totalKeys = number & totalMask;  // Extract the total keys
     std::bitset<64> bitset2(totalKeys);
     std::cout << "total " << bitset2 << "\n";
 
