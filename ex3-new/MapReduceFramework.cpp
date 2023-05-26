@@ -327,12 +327,18 @@ void reducePhase(ThreadContext* threadContext){
     JobContext* job = threadContext->job;
     if (getStage(job) == SHUFFLE_STAGE) {updateNewStage(job, REDUCE_STAGE, job->nextPhaseInputSize);}
     unsigned long vecToReduceSize = job->vecToReduce.size();
-    int index = getProcessedKeysCounter(job);
+    uint index = job->indexCounter->load();
     while (index < vecToReduceSize){
-        auto currentVector = (job->vecToReduce)[index];
+        auto currentVector = job->vecToReduce[index];
         job->client->reduce(&currentVector, threadContext);
         incrementProcessedKeysBy(job, currentVector.size());
-        index = getProcessedKeysCounter(job);
+
+        int result = pthread_mutex_lock(&job->mutex);
+        if(result != 0){mutex_failure(job, true);}
+        job->indexCounter->fetch_add(1);
+        index = job->indexCounter->load();
+        result = pthread_mutex_unlock(&job->mutex);
+        if(result != 0){mutex_failure(job, false);}
     }
 }
 
