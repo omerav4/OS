@@ -247,12 +247,14 @@ void mapPhase(ThreadContext* thread, JobContext* job)
 {
     unsigned long totalKeys = job->inputVec->size();
     if (getStage(job) == UNDEFINED_STAGE) {updateNewStage(job, MAP_STAGE, totalKeys);}
+    printf("stage %d percentage %f", getStage(job), getPercentage(job));
     int index = getProcessedKeysCounter(job);
     while (index < totalKeys)
     {
         auto pair = job->inputVec->at(index);
         job->client->map(pair.first, pair.second, thread);
         incrementProcessedKeysBy(job, 1);
+        printf("stage %d percentage %f", getStage(job), getPercentage(job));
         index = getProcessedKeysCounter(job);
     }
 }
