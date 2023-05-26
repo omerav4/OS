@@ -261,7 +261,7 @@ void mapPhase(ThreadContext* thread, JobContext* job)
 {
     unsigned long totalKeys = job->inputVec->size();
     if (getStage(job) == UNDEFINED_STAGE) {updateNewStage(job, MAP_STAGE, totalKeys);}
-    std::cout << "stage: " << getStage(job) << ", percentage: " << getPercentage(job) << "\n";
+    std::cout << "stage: " << getStage(job) << ", percentageeeeee: " << getPercentage(job) << "\n";
     int index = getProcessedKeysCounter(job);
     //std::cout << "total keys: " << (job) << ", percentage: " << getPercentage(job) << "\n";
 
