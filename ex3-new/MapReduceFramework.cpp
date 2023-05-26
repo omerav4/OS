@@ -216,35 +216,26 @@ void updateNewStage(JobContext* job, int stage, int total){
 void incrementProcessedKeysBy(JobContext* job, int factor){
     uint64_t number = job->atomicStage->load();
     std::cout << "startttt " << job->atomicStage->load() << "\n" << std::endl;
-    std::cout << "startttt " << number << "\n" << std::endl;
 
     printf("load %llu\n", number);
 
     uint64_t processedKeysMask = 0x7fffffffULL;  // Mask for the processed keys (31 bits set to 1)
-    printf("processedKeysMask %llu\n", processedKeysMask);
-
     uint64_t processedKeys = (number << 33) >> 33;  // Extract the current processed keys
-    printf("processedKeys %llu\n", processedKeys);
-
     processedKeys += factor;  // Increment the processed keys
-    printf("add factor %llu\n", processedKeys);
-
     processedKeys &= processedKeysMask;  // Apply the mask to keep the processed keys within the range
-    printf("add & processedKeysMask %llu\n", processedKeys);
-
-
     number &= ~(processedKeysMask << 31);  // Clear the current processed keys in the number
-    printf("load3 %llu\n", number);
-
     number |= (processedKeys << 31);  // Update the number with the incremented processed keys
-    printf("load4 %llu\n", number);
     (*(job->atomicStage)).store(number); // Save the new stage
 }
 
 float getPercentage(JobContext* job){
     uint64_t number =  (*(job->atomicStage)).load();
+    std::cout << "number: " << number;
+
     uint64_t processedKeys = (number << 33) >> 33;  // Extract the processed keys
+
     uint64_t totalKeys = (number << 2) >> 33;  // Extract the total keys
+    std::cout << "total Keys: " << totalKeys;
 
     if (totalKeys == 0) {
         // Handle the case where totalKeys is 0 to avoid division by zero
