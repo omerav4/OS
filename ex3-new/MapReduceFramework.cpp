@@ -216,13 +216,12 @@ void incrementProcessedKeysBy(JobContext* job, int factor){
     uint64_t number = job->atomicStage->load();
 
     std::bitset<64> bitset(number);
-    std::cout << "number before increment" << bitset << "\n";
+    std::cout << "number before increment " << bitset << "\n";
+    std::cout << "factor " << factor << "\n";
 
     uint64_t processedKeysMask = 0x7fffffffULL;  // Mask for the processed keys (31 bits set to 1)
     uint64_t processedKeys = (number & processedKeysMask);  // Extract the current processed keys
     processedKeys += factor;  // Increment the processed keys
-    std::bitset<64> bitset3(number);
-    std::cout << "number after adding factor" << bitset3 << "\n";
     processedKeys &= processedKeysMask;  // Apply the mask to keep the processed keys within the range
     number &= ~(processedKeysMask);  // Clear the current processed keys in the number
     number |= (processedKeys);  // Update the number with the incremented processed keys
