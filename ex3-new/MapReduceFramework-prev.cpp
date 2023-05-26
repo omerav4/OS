@@ -19,19 +19,21 @@
 #define MUTEX_UNLOCK_FAILURE "system error: mutex unlock  failed\n"
 #define MUTEX_LOCK_FAILURE "system error: mutex lock  failed\n"
 #define MUTEX_DESTROY_ERR "system error: [[Barrier]] error on pthread_mutex_destroy"
+
 ///-------------------------------- typedefs ----------------------------------
 typedef std::atomic<int> atomicIntCounter;
 
 // two least significant bits are for STAGE enum representation
 // next 31 bits are for already processed keys
-// last 31 bits are for
-typedef std::atomic<uint64_t> atomicJobStage;   // TODO - maybe delete
+// last 31 bits are for total keys
+typedef std::atomic<uint64_t> atomicJobStage;
 typedef std::vector<IntermediateVec> ShuffledVector;
 typedef struct JobContext JobContext;
 typedef struct ThreadContext ThreadContext;
 
 /**
- *
+ * ThreadContext struct which represents the context of each thread.
+ * Includes the thread's id, job, the thread itself and the intermediate vector.
  */
 struct ThreadContext{
     int id;
@@ -41,7 +43,10 @@ struct ThreadContext{
 };
 
 /**
- *
+ * JobContext struct which represents the context of each job.
+ * Includes the job's client, barrier, input vector, output vector, multi thread level, array of all the thread contexts,
+ * an atomic variable for the job's state and processed keys counter, mutex, index counter for each phase, shuffeled
+ * vector for the reduce phase, etc.
  */
 struct JobContext{
     // given by user
@@ -52,60 +57,79 @@ struct JobContext{
     OutputVec* outputVec;
 
     // independent fields
-    ThreadContext* threadContexts;
+    ThreadContext* threadContexts;  // array of the threads contexts
+    bool isJoined;  // indicates that a thread called the pthread_join function
+    ShuffledVector shuffledVec; // vector of vectors for shuffle phase
+    ShuffledVector vecToReduce; // vector of vectors for reduce phase
+
+    atomicJobStage* atomicStage;
     int processedKeys;   /// TODO - should be atomic?
     JobState state;   /// TODO should we change to an atomic var?
     atomicIntCounter* indexCounter;  //
     std::atomic<int> nextPhaseInputSize; //
+
     pthread_mutex_t mutex; //
     pthread_mutex_t emitMutex;  /// TODO - is possible with one mutex?
-    bool isJoined;  //
-    ShuffledVector shuffledVec; // vector of vectors for shuffle phase
-    ShuffledVector vecToReduce; // vector of vectors for reduce phase
 };
 
 ///-------------------------------- free resources ------------------------------------
 /**
- *
- * @param threads
- * @param len
+ * Frees the given array of threads contexts
+ * @param threads- the array of thread contexts to free
+ * @param len- the length of the array
  */
 void freeThreadContexts(ThreadContext* threads, int len) {
     for(int i = 0; i < len; i++) {
-        delete (threads + i) ->intermediateVec;
+        delete (threads + i)->intermediateVec;
         delete (threads + i)->thread;
-        /// TODO do we need to delete pthread?
+        // TODO do we need to delete pthread?
     }
 }
 /**
- *
- * @param job
+ * Frees the given job
+ * @param job- the job to free
  */
 void freeJobContext(JobContext* job) {
     freeThreadContexts(job->threadContexts, job->multiThreadLevel);
     delete job->indexCounter;
     delete job->barrier;
+    delete job->atomicStage;
     if (pthread_mutex_destroy(&job->mutex) != 0) {
         std::cerr << MUTEX_DESTROY_ERR;
         exit(EXIT_FAILURE);
     }
 }
 
+///-------------------------------- handle errors ------------------------------------
+/**
+ * Handles with allocation failure by printing an error and exit the program
+ */
+void allocation_failure(){
+    std::cerr << ERROR_MESSAGE_ALLOCATION_FAILURE << std::endl;
+    exit(EXIT_FAILURE);
+}
+
+ /**
+ * Handles with allocation of mutex functionality
+  * @param the job of the current mutex
+  */
+void mutex_failure(JobContext* job){
+    freeJobContext(job);
+    std::cerr << ERROR_MESSAGE_ALLOCATION_FAILURE << std::endl;
+    exit(EXIT_FAILURE);
+}
 ///-------------------------------- create structs ------------------------------------
 /**
- *
- * @param jobContext
- * @param id
- * @return
+ * Creates a new instance of thread context
+ * @param jobContext- the job that creates the current thread
+ * @param id- the id of the new thread
+ * @return- a pointer of the new thread context
  */
 ThreadContext* createThreadContext(JobContext* jobContext, int id)
 {
     auto* threadContext = new (std::nothrow) ThreadContext;
-    if (!threadContext)
-    {    // allocation failed
-        std::cerr << ERROR_MESSAGE_ALLOCATION_FAILURE << std::endl;
-        exit(EXIT_FAILURE);
-    }
+    if (!threadContext) {allocation_failure();}
+
     threadContext->thread = new (std::nothrow) pthread_t;
     threadContext->intermediateVec = new (std::nothrow) IntermediateVec;
     threadContext->job = jobContext;
@@ -116,63 +140,74 @@ ThreadContext* createThreadContext(JobContext* jobContext, int id)
         delete threadContext->thread;
         delete threadContext->intermediateVec;
         delete threadContext;
-        std::cerr << ERROR_MESSAGE_ALLOCATION_FAILURE << std::endl;
-        exit(EXIT_FAILURE);
+        allocation_failure();
     }
     return threadContext;
 }
 
 /**
- *
- * @param threads
- * @param multiThreadLevel
- * @param inputVec
- * @param outputVec
- * @param client
- * @return
+ * Creates a new instance of job context
+ * @param threads- a pointer for the array of threads contexts of the current job
+ * @param multiThreadLevel- the number of threads of the current job
+ * @param inputVec- the input vector of the current job
+ * @param outputVec- the output vector of the current job that will be updated after the reduce phase
+ * @param client- the client of the curent job
+ * @return a pointer of the new job context
  */
 JobContext* createJobContext(ThreadContext* threads, int multiThreadLevel, const InputVec& inputVec,
                              OutputVec& outputVec, const MapReduceClient& client)
 {
     JobContext* jobContext = new (std::nothrow) JobContext;
-    if (!jobContext) {
-        std::cerr << ERROR_MESSAGE_ALLOCATION_FAILURE << std::endl;
-        exit(EXIT_FAILURE);
-    }
+    if (!jobContext) {allocation_failure();}
     jobContext->multiThreadLevel = multiThreadLevel;
     jobContext->threadContexts = threads;
     jobContext->client = &client;
     jobContext->inputVec = &inputVec;
     jobContext->outputVec = &outputVec;
+
+    jobContext->atomicStage = new (std::nothrow) atomicJobStage;
+
     jobContext->processedKeys = 0;
 
     jobContext->shuffledVec =  ShuffledVector(multiThreadLevel);  //TODO - is this good?
-    jobContext->barrier = new Barrier(multiThreadLevel);;
     jobContext->indexCounter = new (std::nothrow) atomicIntCounter;
-
     jobContext->mutex = pthread_mutex_t(PTHREAD_MUTEX_INITIALIZER);
     jobContext->emitMutex = pthread_mutex_t(PTHREAD_MUTEX_INITIALIZER);
 
+    jobContext->barrier = new Barrier(multiThreadLevel);
     jobContext->shuffledVec = std::vector<IntermediateVec>(multiThreadLevel);  //TODO change names, add checking of allocation
     jobContext->vecToReduce = std::vector<IntermediateVec>();
     jobContext->nextPhaseInputSize = 0;
 
     // Check for allocation failures
-    if ( !jobContext->barrier || !jobContext->indexCounter) {
+    if ( !jobContext->barrier || !jobContext->indexCounter || !jobContext->atomicStage) {
         freeJobContext(jobContext);
-        }
+        allocation_failure();
+    }
     return jobContext;
 }
 
 ///-------------------------- check and update stage --------------------------
+int checkStage(JobContext* job)
+{
+    auto state = (*(job->atomicStage)).load();
+    return JOB_STAGE(state);
+}
 
-
+// 2 bits     31 bits            31 bits
+// stage    total keys      processed keys
+void updateStage(JobContext* job, int stage, int total){
+    uint64_t jobStageBits = static_cast<uint64_t>(stage) << 62;
+    uint64_t totalKeysBits = static_cast<uint64_t>(total) << 31;
+    uint64_t updatedNumber = jobStageBits | totalKeysBits | 0;
+    (*(job->atomicStage)).store(updatedNumber); // Save the new stage
+}
 
 ///-------------------------------- phases ------------------------------------
 /**
- *
- * @param thread
- * @param job
+ * Represents the map phase of the job
+ * @param thread- the current thread
+ * @param job- the current job
  */
 void mapPhase(ThreadContext* thread, JobContext* job)
 {
@@ -189,15 +224,17 @@ void mapPhase(ThreadContext* thread, JobContext* job)
         auto pair = job->inputVec->at(index);
         job->client->map(pair.first, pair.second, thread);
         //INCREMENT_BY_ONE(*(job->atomicStage));
-        pthread_mutex_lock(&job->mutex); // TODO handle if error
+
+        if (pthread_mutex_lock(&job->mutex) != 0) {mutex_failure(job);}
         job->processedKeys += 1;
         job->state.percentage =  100 * ((float) job->processedKeys /(float) inputVecSize);
-        pthread_mutex_unlock(&job->mutex); // TODO handle if error
+        if (pthread_mutex_unlock(&job->mutex) != 0) {mutex_failure(job);}
+
         index = (*(job->indexCounter))++;
     }
 }
 /**
- *
+ * Represents the map phase of the job
  * @param pair1
  * @param pair2
  * @return
@@ -206,6 +243,10 @@ bool compare(IntermediatePair pair1, IntermediatePair pair2){
     return pair1.first->operator<(*pair2.first);
 }
 
+/**
+ * Represents the shuffle phase of the job
+ * @param job- the current job
+ */
 void shufflePhase(JobContext* job){
     IntermediateVec allThreadVec;
     for(const IntermediateVec& vec: (job->shuffledVec))
@@ -290,6 +331,10 @@ void shufflePhase(JobContext* job){
     }
 }
 
+/**
+ * Represents the reduce phase of the job
+ * @param job- the current job
+ */
 void reducePhase(ThreadContext* threadContext){
 //    if(checkStage(job) == SHUFFLE_STAGE){
 //        job->state.stage = REDUCE_STAGE;
@@ -409,13 +454,15 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 }
 
 void waitForJob(JobHandle job){
+    // if isJoined = true, while we are not 100% and not in reduce, so we will check each time
     auto jobContext = static_cast<JobContext*>(job);
-    if (!jobContext->isJoined){
+    if (!jobContext->isJoined){         // TODO change from atomic flag
+        jobContext->isJoined = true;
         for(int i = 0; i < jobContext->multiThreadLevel; i++){
             int result = pthread_join(*jobContext->threadContexts[i].thread, nullptr);
-            if (result != 0)
+            if(result != 0)
             {
-                std::cerr <<JOIN_FAILURE;
+                std::cerr << JOIN_FAILURE;
                 exit(EXIT_FAILURE);
             }
         }
