@@ -263,6 +263,7 @@ void mapPhase(ThreadContext* thread, JobContext* job)
     if (getStage(job) == UNDEFINED_STAGE) {updateNewStage(job, MAP_STAGE, totalKeys);}
     std::cout << "stage: " << getStage(job) << ", percentageeeeee: " << getPercentage(job) << "\n";
     int index = getProcessedKeysCounter(job);
+    exit(0);
     //std::cout << "total keys: " << (job) << ", percentage: " << getPercentage(job) << "\n";
 
 //    while (index < totalKeys)
