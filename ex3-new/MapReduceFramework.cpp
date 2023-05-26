@@ -321,8 +321,11 @@ void shufflePhase(JobContext* job){
  * @param job- the current job
  */
 void reducePhase(ThreadContext* threadContext){
+    std::cout << "start reduce\n";
     JobContext* job = threadContext->job;
-    if (getStage(job) == UNDEFINED_STAGE) {updateNewStage(job, MAP_STAGE, job->nextPhaseInputSize);}
+    std::cout << "before update stage\n";
+    if (getStage(job) == SHUFFLE_STAGE) {updateNewStage(job, REDUCE_STAGE, job->nextPhaseInputSize);}
+    std::cout << "after update stage\n";
     unsigned long vecToReduceSize = job->vecToReduce.size();
     int index = getProcessedKeysCounter(job);
     while (index < vecToReduceSize){
@@ -346,9 +349,7 @@ void* mapReduce(void* context){
     waitForAllThreads(job);  // verify all threads finished map & sort
 
     if(thread->id == 0) {shufflePhase(job);}
-    std::cout << "after shuffle, before barrier\n";
     waitForAllThreads(job);  // verify thread 0 finished shuffle
-    std::cout << "after shuffle, after barrier\n";
     reducePhase(thread);
     return nullptr;
 }
