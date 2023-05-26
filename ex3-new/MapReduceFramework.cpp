@@ -454,13 +454,15 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 }
 
 void waitForJob(JobHandle job){
+    // if isJoined = true, while we are not 100% and not in reduce, so we will check each time
     auto jobContext = static_cast<JobContext*>(job);
-    if (!jobContext->isJoined){
+    std::cerr << "hiiii";
+    if (!jobContext->isJoined){         // TODO change from atomic flag
         for(int i = 0; i < jobContext->multiThreadLevel; i++){
             int result = pthread_join(*jobContext->threadContexts[i].thread, nullptr);
-            if (result != 0)
+            if(result != 0)
             {
-                std::cerr <<JOIN_FAILURE;
+                std::cerr << JOIN_FAILURE;
                 exit(EXIT_FAILURE);
             }
         }
