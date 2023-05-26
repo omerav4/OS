@@ -206,13 +206,9 @@ void updateNewStage(JobContext* job, int stage, int total){
     uint64_t processedKeysBits = ~(0x7fffffffULL);
     uint64_t updatedNumber = (jobStageBits | totalKeysBits) & processedKeysBits;
     (*(job->atomicStage)).store(updatedNumber); // Save the new stage
-//    uint64_t newStage = static_cast<uint64_t>(stage) << 62;
-//    newStage |= ((total & (0x7fffffffULL)) << 31);
-//    newStage &= ~(0x7fffffffULL);
-    std::bitset<64> bitset(updatedNumber);
+//    std::bitset<64> bitset(updatedNumber);
+//    std::cout << "newStage" << bitset << "\n";
 
-    std::cout << "newStage" << bitset << "\n";
-//    job->atomicStage->store(newStage);
 
 }
 
