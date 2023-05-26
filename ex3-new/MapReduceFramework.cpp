@@ -209,7 +209,11 @@ void updateNewStage(JobContext* job, int stage, int total){
 
 void incrementProcessedKeysBy(JobContext* job, int factor){
     uint64_t number = job->atomicStage->load();
+    std::cout << "startttt " << job->atomicStage->load() << "\n" << std::endl;
+    std::cout << "startttt " << number << "\n" << std::endl;
+
     printf("load %llu\n", number);
+
     uint64_t processedKeysMask = 0x7fffffffULL;  // Mask for the processed keys (31 bits set to 1)
     printf("processedKeysMask %llu\n", processedKeysMask);
 
