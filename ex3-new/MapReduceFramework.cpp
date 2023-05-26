@@ -167,7 +167,7 @@ JobContext* createJobContext(ThreadContext* threads, int multiThreadLevel, const
     jobContext->outputVec = &outputVec;
 
     jobContext->atomicStage = new (std::nothrow) atomicJobStage(0);
-    std::cout << "start " << jobContext->atomicStage->load() << "\n" << std::endl;
+//    std::cout << "start " << jobContext->atomicStage->load() << "\n" << std::endl;
 
     jobContext->processedKeys = 0;
 
@@ -208,7 +208,7 @@ void updateNewStage(JobContext* job, int stage, int total){
 }
 
 void incrementProcessedKeysBy(JobContext* job, int factor){
-    uint64_t number = (*(job->atomicStage)).load();
+    uint64_t number = job->atomicStage->load();
     printf("load %llu\n", number);
     uint64_t processedKeysMask = 0x7fffffffULL;  // Mask for the processed keys (31 bits set to 1)
     printf("processedKeysMask %llu\n", processedKeysMask);
