@@ -254,7 +254,7 @@ int getProcessedKeysCounter(JobContext* job){
  * @param job- the current job
  */
 void mapPhase(ThreadContext* thread, JobContext* job)
-{   std::cout << "Starting map" << "\n";
+{
     unsigned long totalKeys = job->inputVec->size();
     if (getStage(job) == UNDEFINED_STAGE) {updateNewStage(job, MAP_STAGE, totalKeys);}
     int index = getProcessedKeysCounter(job);
@@ -266,7 +266,6 @@ void mapPhase(ThreadContext* thread, JobContext* job)
         incrementProcessedKeysBy(job, 1);
         index = getProcessedKeysCounter(job);
     }
-    std::cout << "Finishing map" << "\n";
 }
 /**
  * Represents the map phase of the job
