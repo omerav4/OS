@@ -217,9 +217,7 @@ void incrementProcessedKeysBy(JobContext* job, int factor){
 
     std::bitset<64> bitset(number);
     //std::cout << "number at increment" << bitset << "\n";
-
     uint64_t processedKeysMask = 0x7fffffffULL;  // Mask for the processed keys (31 bits set to 1)
-    //uint64_t processedKeys = (number << 33) >> 33;  // Extract the current processed keys
     uint64_t processedKeys = (number & processedKeysMask);  // Extract the current processed keys
     processedKeys += factor;  // Increment the processed keys
     processedKeys &= processedKeysMask;  // Apply the mask to keep the processed keys within the range
@@ -341,12 +339,12 @@ void* mapReduce(void* context){
     auto thread = (ThreadContext*) context;
     JobContext* job = thread->job;
     mapPhase(thread, job);
-//    std::sort((job->allIntermediateVecs)[thread->id].begin(), job->allIntermediateVecs[thread->id].end(), compare);
-//    waitForAllThreads(job);  // verify all threads finished map & sort
-//
-//    if(thread->id == 0) {shufflePhase(job);}
-//    waitForAllThreads(job);  // verify thread 0 finished shuffle
-//    reducePhase(thread);
+    std::sort((job->allIntermediateVecs)[thread->id].begin(), job->allIntermediateVecs[thread->id].end(), compare);
+    waitForAllThreads(job);  // verify all threads finished map & sort
+
+    if(thread->id == 0) {shufflePhase(job);}
+    waitForAllThreads(job);  // verify thread 0 finished shuffle
+    reducePhase(thread);
     return nullptr;
 }
 
