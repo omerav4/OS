@@ -230,12 +230,12 @@ void incrementProcessedKeysBy(JobContext* job, int factor){
 
 float getPercentage(JobContext* job){
     uint64_t number =  (*(job->atomicStage)).load();
-    std::cout << "number: " << number;
+    std::cout << "number at getPercentage: " << number << "\n";
 
     uint64_t processedKeys = (number << 33) >> 33;  // Extract the processed keys
 
     uint64_t totalKeys = (number << 2) >> 33;  // Extract the total keys
-    std::cout << "total Keys: " << totalKeys;
+    std::cout << "total Keys at getPercentage:" << totalKeys << "\n";
 
     if (totalKeys == 0) {
         // Handle the case where totalKeys is 0 to avoid division by zero
@@ -261,8 +261,10 @@ void mapPhase(ThreadContext* thread, JobContext* job)
 {
     unsigned long totalKeys = job->inputVec->size();
     if (getStage(job) == UNDEFINED_STAGE) {updateNewStage(job, MAP_STAGE, totalKeys);}
-    std::cout << "stage: " << getStage(job) << ", percentage: " << getPercentage(job);
+    std::cout << "stage: " << getStage(job) << ", percentage: " << getPercentage(job) << "\n";
     int index = getProcessedKeysCounter(job);
+    //std::cout << "total keys: " << (job) << ", percentage: " << getPercentage(job) << "\n";
+
     while (index < totalKeys)
     {
         auto pair = job->inputVec->at(index);
