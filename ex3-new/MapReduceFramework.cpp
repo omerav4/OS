@@ -232,18 +232,20 @@ float getPercentage(JobContext* job){
     uint64_t number =  (*(job->atomicStage)).load();
     uint64_t processedMask = (1ULL << 31) - 1;
     uint64_t processedKeys = number & processedMask;  // Extract the processed keys
-    std::bitset<64> bitset(processedKeys);
-    std::cout << "processed " << bitset << "\n";
+//    std::bitset<64> bitset(processedKeys);
+//    std::cout << "processed " << bitset << "\n";
     uint64_t totalMask = ((3ULL << 62) - 1) & ~ processedMask;
     uint64_t totalKeys = number & totalMask;  // Extract the total keys
-    std::bitset<64> bitset2(totalKeys);
-    std::cout << "total " << bitset2 << "\n";
+//    std::bitset<64> bitset2(totalKeys);
+//    std::cout << "total " << bitset2 << "\n";
 
     if (totalKeys == 0) {
         // Handle the case where totalKeys is 0 to avoid division by zero
         return 0.0f;
     }
-    float percentage = static_cast<float>(processedKeys) / static_cast<float>(totalKeys) * 100.0f;
+    std::bitset<64> bitset((processedKeys / totalKeys));
+    std::cout << "total " << bitset << "\n";
+    float percentage = static_cast<float>(processedKeys / totalKeys) * 100.0f;
     return percentage;
 }
 
