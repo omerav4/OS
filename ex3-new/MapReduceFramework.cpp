@@ -359,9 +359,9 @@ void* mapReduce(void* context){
     mapPhase(thread, job);
     std::sort((job->allIntermediateVecs)[thread->id].begin(), job->allIntermediateVecs[thread->id].end(), compare);
     waitForAllThreads(job);  // verify all threads finished map & sort
-    if(thread->id == 0) {shufflePhase(job);}
-    waitForAllThreads(job);  // verify thread 0 finished shuffle
-    reducePhase(thread);
+//    if(thread->id == 0) {shufflePhase(job);}
+//    waitForAllThreads(job);  // verify thread 0 finished shuffle
+//    reducePhase(thread);
     return nullptr;
 }
 
