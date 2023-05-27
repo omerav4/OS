@@ -385,6 +385,7 @@ void emit2(K2* key, V2* value, void* context)
 }
 
 void emit3 (K3* key, V3* value, void* context){
+    std::cout << "hiiiii\n";
     auto threadContext = (ThreadContext*) context;
     auto job = threadContext->job;
     int result = pthread_mutex_lock(&job->emitMutex);
