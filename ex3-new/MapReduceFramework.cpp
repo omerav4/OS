@@ -91,6 +91,7 @@ void freeThreadContexts(ThreadContext* threads, int len) {
  * @param job- the job to free
  */
 void freeJobContext(JobContext* job) {
+    std::cout << "start free job\n";
     freeThreadContexts(job->threadContexts, job->multiThreadLevel);
 // delete job->indexCounter;
     delete job->barrier;
@@ -430,6 +431,7 @@ void getJobState(JobHandle job, JobState* state){
     state->percentage = getPercentage(jobContext);
 }
 void closeJobHandle(JobHandle job){
+    std::cout << "start close job\n";
     waitForJob(job);
     auto jobContext = static_cast<JobContext*>(job);
     freeJobContext(jobContext);
