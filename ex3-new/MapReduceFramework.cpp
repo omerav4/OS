@@ -263,9 +263,13 @@ void mapPhase(ThreadContext* thread, JobContext* job)
         auto pair = job->inputVec->at(index);
         job->client->map(pair.first, pair.second, thread);
         int result = pthread_mutex_lock(&job->mutex);
+        if(result != 0){mutex_failure(job, true);}
+
         incrementProcessedKeysBy(job, 1);
         result = pthread_mutex_unlock(&job->mutex);
         index = getProcessedKeysCounter(job);
+        if(result != 0){mutex_failure(job, false);}
+
     }
 }
 /**
