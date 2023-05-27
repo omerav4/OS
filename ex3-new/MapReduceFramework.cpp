@@ -230,7 +230,7 @@ float getPercentage(JobContext* job){
     std::bitset<64> bitset(processedKeys);
     std::cout << "processed " << bitset << "\n";
     uint64_t totalKeys = (number << 2) >> 33;  // Extract the total keys
-    std::bitset<64> bitset2(processedKeys);
+    std::bitset<64> bitset2(totalKeys);
     std::cout << "total " << bitset2 << "\n";
 
     if (totalKeys == 0) {
