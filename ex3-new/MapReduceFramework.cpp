@@ -411,6 +411,7 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 
 void waitForJob(JobHandle job){
     // if isJoined = true, while we are not 100% and not in reduce, so we will check each time
+    std::cout << "start wait\n";
     auto jobContext = static_cast<JobContext*>(job);
     if (!jobContext->isJoined){         // TODO change from atomic flag
         jobContext->isJoined = true;
@@ -433,6 +434,7 @@ void getJobState(JobHandle job, JobState* state){
 void closeJobHandle(JobHandle job){
     std::cout << "start close job\n";
     waitForJob(job);
+    std::cout << "after wait\n";
     auto jobContext = static_cast<JobContext*>(job);
     freeJobContext(jobContext);
 }
