@@ -58,7 +58,8 @@ public:
             count += static_cast<const VCount*>(pair.second)->count;
             std::cout << "count " << count << " finishPair\n";
             delete pair.first;
-			delete pair.second;
+            std::cout << "deleteeee\n ";
+            delete pair.second;
 		}
         KChar* k3 = new KChar(c);
         std::cout << "before before\n";
