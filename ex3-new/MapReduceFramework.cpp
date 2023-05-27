@@ -331,11 +331,7 @@ void reducePhase(ThreadContext* threadContext){
         unsigned long index = (job->indexCounter)++;
         if (index < vecToReduceSize){
             auto currentVector = job->vecToReduce[index];
-            std::cout << "start reduce, thread id: " << threadContext->id << " finishID\n";
-
             job->client->reduce(&currentVector, threadContext);
-            std::cout << "after reduce, index: " << index << " finish2\n";
-
             int result = pthread_mutex_lock(&job->mutex);
             if(result != 0){mutex_failure(job, true);}
             incrementProcessedKeysBy(job, currentVector.size());
@@ -344,8 +340,6 @@ void reducePhase(ThreadContext* threadContext){
         }
         else{break;}
     }
-    std::cout << "biiiii\n";
-
 }
 
 ///------------------------------------------- flows -------------------------------------------------------
