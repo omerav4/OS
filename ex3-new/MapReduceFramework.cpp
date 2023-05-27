@@ -336,12 +336,12 @@ void reducePhase(ThreadContext* threadContext){
 
         incrementProcessedKeysBy(job, currentVector.size());
 
-        result = pthread_mutex_lock(&job->mutex);
-        if(result != 0){mutex_failure(job, true);}
-        job->indexCounter->fetch_add(1);
-        index = job->indexCounter->load();
-        result = pthread_mutex_unlock(&job->mutex);
-        if(result != 0){mutex_failure(job, false);}
+//        result = pthread_mutex_lock(&job->mutex);
+//        if(result != 0){mutex_failure(job, true);}
+//        job->indexCounter->fetch_add(1);
+//        index = job->indexCounter->load();
+//        result = pthread_mutex_unlock(&job->mutex);
+//        if(result != 0){mutex_failure(job, false);}
         unsigned long index = (job->indexCounter)++;
     }
 }
