@@ -321,12 +321,13 @@ void reducePhase(ThreadContext* threadContext){
     JobContext* job = threadContext->job;
     if (getStage(job) == SHUFFLE_STAGE) {updateNewStage(job, REDUCE_STAGE, job->nextPhaseInputSize);}
     unsigned long vecToReduceSize = job->vecToReduce.size();
-    std::cout << "vecToReduceSize: " << vecToReduceSize <<" finish vecToReduceSize\n";
 
+    std::cout << "before mutex\n";
     int result = pthread_mutex_lock(&job->mutex);
     if(result != 0){mutex_failure(job, true);}
     uint index = job->indexCounter->load();
     std::cout << "index: " << index << " finish index\n";
+    std::cout << "after mutex\n";
     result = pthread_mutex_unlock(&job->mutex);
     if(result != 0){mutex_failure(job, false);}
 
