@@ -351,12 +351,12 @@ void* mapReduce(void* context){
     auto thread = (ThreadContext*) context;
     JobContext* job = thread->job;
     mapPhase(thread, job);
-    std::cout << "hi\n";
     std::sort((job->allIntermediateVecs)[thread->id].begin(), job->allIntermediateVecs[thread->id].end(), compare);
-    std::cout << "hi2\n";
     waitForAllThreads(job);  // verify all threads finished map & sort
+    std::cout << "hi\n";
 
     if(thread->id == 0) {shufflePhase(job);}
+    std::cout << "hiqqq\n";
     waitForAllThreads(job);  // verify thread 0 finished shuffle
     reducePhase(thread);
     return nullptr;
