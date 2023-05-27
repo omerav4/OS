@@ -341,6 +341,8 @@ void reducePhase(ThreadContext* threadContext){
             incrementProcessedKeysBy(job, currentVector.size());
             result = pthread_mutex_unlock(&job->mutex);
             if(result != 0){mutex_failure(job, false);}
+        }
+        else{break;}
 //        job->indexCounter->fetch_add(1);
 //        index = job->indexCounter->load();
     }
