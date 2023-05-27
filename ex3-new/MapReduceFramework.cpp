@@ -254,9 +254,11 @@ int getProcessedKeysCounter(JobContext* job){
  */
 void mapPhase(ThreadContext* thread, JobContext* job)
 {
-    std::cout << "i: " << thread->id << "\n";
     unsigned long totalKeys = job->inputVec->size();
-    if (getStage(job) == UNDEFINED_STAGE) {updateNewStage(job, MAP_STAGE, totalKeys);}
+    if (getStage(job) == UNDEFINED_STAGE) {
+        updateNewStage(job, MAP_STAGE, totalKeys);
+        std::cout << "i: " << thread->id << "\n";
+    }
     int index = getProcessedKeysCounter(job);
 
     while (index < totalKeys)
