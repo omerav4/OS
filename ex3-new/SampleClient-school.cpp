@@ -53,7 +53,6 @@ public:
 	virtual void reduce(const IntermediateVec* pairs, 
 		void* context) const {
 		const char c = static_cast<const KChar*>(pairs->at(0).first)->c;
-        std::cout << "start reduce\n";
 		int count = 0;
 		for(const IntermediatePair& pair: *pairs) {
             count += static_cast<const VCount*>(pair.second)->count;
@@ -61,11 +60,11 @@ public:
             delete pair.first;
 			delete pair.second;
 		}
-        std::cout << "hiiii2\n";
         KChar* k3 = new KChar(c);
-		VCount* v3 = new VCount(count);
-		usleep(150000);
+        std::cout << "before before\n";
+        VCount* v3 = new VCount(count);
         std::cout << "before emit3\n";
+        usleep(150000);
         emit3(k3, v3, context);
 	}
 };

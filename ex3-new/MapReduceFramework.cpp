@@ -260,7 +260,7 @@ void mapPhase(ThreadContext* thread, JobContext* job)
 
     while (index < totalKeys)
     {
-        std::cout << "i: " << thread->id << "finish\n";
+//        std::cout << "i: " << thread->id << "finish\n";
         auto pair = job->inputVec->at(index);
         job->client->map(pair.first, pair.second, thread);
         int result = pthread_mutex_lock(&job->mutex);
@@ -322,30 +322,25 @@ void reducePhase(ThreadContext* threadContext){
     if (getStage(job) == SHUFFLE_STAGE) {updateNewStage(job, REDUCE_STAGE, job->nextPhaseInputSize);}
     unsigned long vecToReduceSize = job->vecToReduce.size();
 
-//    std::cout << "before mutex\n";
     int result = pthread_mutex_lock(&job->mutex);
     if(result != 0){mutex_failure(job, true);}
     uint index = job->indexCounter->load();
-//    std::cout << "index: " << index << " finish index\n";
-//    std::cout << "after mutex\n";
     result = pthread_mutex_unlock(&job->mutex);
     if(result != 0){mutex_failure(job, false);}
 
     while (index < vecToReduceSize){
         auto currentVector = job->vecToReduce[index];
-        std::cout << "get current vector, index: " << index << " finish1\n";
+        std::cout << "start reduce, i: " << threadContext->id << " finishID\n";
 
         job->client->reduce(&currentVector, threadContext);
         std::cout << "after reduce, index: " << index << " finish2\n";
 
         incrementProcessedKeysBy(job, currentVector.size());
-        std::cout << "increase, index: " << index << " finish3\n";
 
         result = pthread_mutex_lock(&job->mutex);
         if(result != 0){mutex_failure(job, true);}
         job->indexCounter->fetch_add(1);
         index = job->indexCounter->load();
-        std::cout << "load, index: " << index << " finish4\n";
         result = pthread_mutex_unlock(&job->mutex);
         if(result != 0){mutex_failure(job, false);}
     }
@@ -385,7 +380,6 @@ void emit2(K2* key, V2* value, void* context)
 }
 
 void emit3 (K3* key, V3* value, void* context){
-    std::cout << "hiiiii\n";
     auto threadContext = (ThreadContext*) context;
     auto job = threadContext->job;
     int result = pthread_mutex_lock(&job->emitMutex);
