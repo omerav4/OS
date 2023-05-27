@@ -327,22 +327,22 @@ void reducePhase(ThreadContext* threadContext){
     result = pthread_mutex_unlock(&job->mutex);
     if(result != 0){mutex_failure(job, false);}
 
-    while (index < vecToReduceSize){
-        auto currentVector = job->vecToReduce[index];
-        std::cout << "start reduce, i: " << threadContext->id << " finishID\n";
+    while(true){
+        unsigned long index = (job->indexCounter)++;
+        if (index < vecToReduceSize){
+            auto currentVector = job->vecToReduce[index];
+            std::cout << "start reduce, i: " << threadContext->id << " finishID\n";
 
-        job->client->reduce(&currentVector, threadContext);
-        std::cout << "after reduce, index: " << index << " finish2\n";
+            job->client->reduce(&currentVector, threadContext);
+            std::cout << "after reduce, index: " << index << " finish2\n";
 
-        incrementProcessedKeysBy(job, currentVector.size());
-
-//        result = pthread_mutex_lock(&job->mutex);
-//        if(result != 0){mutex_failure(job, true);}
+            result = pthread_mutex_lock(&job->mutex);
+            if(result != 0){mutex_failure(job, true);}
+            incrementProcessedKeysBy(job, currentVector.size());
+            result = pthread_mutex_unlock(&job->mutex);
+            if(result != 0){mutex_failure(job, false);}
 //        job->indexCounter->fetch_add(1);
 //        index = job->indexCounter->load();
-//        result = pthread_mutex_unlock(&job->mutex);
-//        if(result != 0){mutex_failure(job, false);}
-        unsigned long index = (job->indexCounter)++;
     }
 }
 
