@@ -255,14 +255,12 @@ int getProcessedKeysCounter(JobContext* job){
 void mapPhase(ThreadContext* thread, JobContext* job)
 {
     unsigned long totalKeys = job->inputVec->size();
-    if (getStage(job) == UNDEFINED_STAGE) {
-        updateNewStage(job, MAP_STAGE, totalKeys);
-        std::cout << "i: " << thread->id << "\n";
-    }
+    if (getStage(job) == UNDEFINED_STAGE) {updateNewStage(job, MAP_STAGE, totalKeys);}
     int index = getProcessedKeysCounter(job);
 
     while (index < totalKeys)
     {
+        std::cout << "i: " << thread->id << "\n";
         auto pair = job->inputVec->at(index);
         job->client->map(pair.first, pair.second, thread);
         incrementProcessedKeysBy(job, 1);
