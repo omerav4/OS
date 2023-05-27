@@ -321,31 +321,31 @@ void reducePhase(ThreadContext* threadContext){
     if (getStage(job) == SHUFFLE_STAGE) {updateNewStage(job, REDUCE_STAGE, job->nextPhaseInputSize);}
     unsigned long vecToReduceSize = job->vecToReduce.size();
 
-    int result = pthread_mutex_lock(&job->mutex);
-    if(result != 0){mutex_failure(job, true);}
-    unsigned long index = (job->indexCounter)++;
-    result = pthread_mutex_unlock(&job->mutex);
-    if(result != 0){mutex_failure(job, false);}
+//    int result = pthread_mutex_lock(&job->mutex);
+//    if(result != 0){mutex_failure(job, true);}
+//    unsigned long index = (job->indexCounter)++;
+//    result = pthread_mutex_unlock(&job->mutex);
+//    if(result != 0){mutex_failure(job, false);}
 
     while(true){
         unsigned long index = (job->indexCounter)++;
         if (index < vecToReduceSize){
             auto currentVector = job->vecToReduce[index];
-            std::cout << "start reduce, i: " << threadContext->id << " finishID\n";
+            std::cout << "start reduce, thread id: " << threadContext->id << " finishID\n";
 
             job->client->reduce(&currentVector, threadContext);
             std::cout << "after reduce, index: " << index << " finish2\n";
 
-            result = pthread_mutex_lock(&job->mutex);
+            int result = pthread_mutex_lock(&job->mutex);
             if(result != 0){mutex_failure(job, true);}
             incrementProcessedKeysBy(job, currentVector.size());
             result = pthread_mutex_unlock(&job->mutex);
             if(result != 0){mutex_failure(job, false);}
         }
         else{break;}
-//        job->indexCounter->fetch_add(1);
-//        index = job->indexCounter->load();
     }
+    std::cout << "biiiii\n";
+
 }
 
 ///------------------------------------------- flows -------------------------------------------------------
