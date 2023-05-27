@@ -55,17 +55,13 @@ public:
 		const char c = static_cast<const KChar*>(pairs->at(0).first)->c;
 		int count = 0;
 		for(const IntermediatePair& pair: *pairs) {
-            std::cout << "before alll\n ";
             count += static_cast<const VCount*>(pair.second)->count;
-            std::cout << "count " << count << " finishPair\n";
+//            std::cout << "count " << count << " finishPair\n";
             delete pair.first;
-            std::cout << "deleteeee\n ";
             delete pair.second;
 		}
         KChar* k3 = new KChar(c);
-        std::cout << "before before\n";
         VCount* v3 = new VCount(count);
-        std::cout << "before emit3\n";
         usleep(150000);
         emit3(k3, v3, context);
 	}

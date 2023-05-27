@@ -22,7 +22,7 @@
 #define MUTEX_DESTROY_ERR "system error: [[Barrier]] error on pthread_mutex_destroy"
 
 ///-------------------------------- typedefs ----------------------------------
-typedef std::atomic<int> atomicIntCounter;
+typedef std::atomic<uint64_t> atomicIntCounter;
 
 // two least significant bits are for STAGE enum representation
 // next 31 bits are for already processed keys
@@ -66,7 +66,7 @@ struct JobContext{
     atomicJobStage* atomicStage;
     int processedKeys;   /// TODO - should be atomic?
     JobState state;   /// TODO should we change to an atomic var?
-    atomicIntCounter* indexCounter;  //
+    atomicIntCounter indexCounter;  //
     std::atomic<int> nextPhaseInputSize; //
 
     pthread_mutex_t mutex; //
@@ -168,11 +168,10 @@ JobContext* createJobContext(ThreadContext* threads, int multiThreadLevel, const
     jobContext->outputVec = &outputVec;
 
     jobContext->atomicStage = new (std::nothrow) atomicJobStage(0);
-
     jobContext->processedKeys = 0;
 
     jobContext->allIntermediateVecs =  IntermediateVecsVector(multiThreadLevel);  //TODO - is this good?
-    jobContext->indexCounter = new (std::nothrow) atomicIntCounter;
+    jobContext->indexCounter = 0;
     jobContext->mutex = pthread_mutex_t(PTHREAD_MUTEX_INITIALIZER);
     jobContext->emitMutex = pthread_mutex_t(PTHREAD_MUTEX_INITIALIZER);
 
@@ -322,11 +321,11 @@ void reducePhase(ThreadContext* threadContext){
     if (getStage(job) == SHUFFLE_STAGE) {updateNewStage(job, REDUCE_STAGE, job->nextPhaseInputSize);}
     unsigned long vecToReduceSize = job->vecToReduce.size();
 
-//    int result = pthread_mutex_lock(&job->mutex);
-//    if(result != 0){mutex_failure(job, true);}
-    uint index = job->indexCounter->load();
-//    result = pthread_mutex_unlock(&job->mutex);
-//    if(result != 0){mutex_failure(job, false);}
+    int result = pthread_mutex_lock(&job->mutex);
+    if(result != 0){mutex_failure(job, true);}
+    unsigned long index = (job->indexCounter)++;
+    result = pthread_mutex_unlock(&job->mutex);
+    if(result != 0){mutex_failure(job, false);}
 
     while (index < vecToReduceSize){
         auto currentVector = job->vecToReduce[index];
@@ -337,12 +336,13 @@ void reducePhase(ThreadContext* threadContext){
 
         incrementProcessedKeysBy(job, currentVector.size());
 
-        int result = pthread_mutex_lock(&job->mutex);
+        result = pthread_mutex_lock(&job->mutex);
         if(result != 0){mutex_failure(job, true);}
         job->indexCounter->fetch_add(1);
         index = job->indexCounter->load();
         result = pthread_mutex_unlock(&job->mutex);
         if(result != 0){mutex_failure(job, false);}
+        unsigned long index = (job->indexCounter)++;
     }
 }
 
