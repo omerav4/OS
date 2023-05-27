@@ -260,10 +260,12 @@ void mapPhase(ThreadContext* thread, JobContext* job)
 
     while (index < totalKeys)
     {
-        std::cout << "i: " << thread->id << "\n";
+        std::cout << "i: " << thread->id << "finish\n";
         auto pair = job->inputVec->at(index);
         job->client->map(pair.first, pair.second, thread);
+        int result = pthread_mutex_lock(&job->mutex);
         incrementProcessedKeysBy(job, 1);
+        result = pthread_mutex_unlock(&job->mutex);
         index = getProcessedKeysCounter(job);
     }
 }
@@ -349,7 +351,9 @@ void* mapReduce(void* context){
     auto thread = (ThreadContext*) context;
     JobContext* job = thread->job;
     mapPhase(thread, job);
+    std::cout << "hi\n";
     std::sort((job->allIntermediateVecs)[thread->id].begin(), job->allIntermediateVecs[thread->id].end(), compare);
+    std::cout << "hi2\n";
     waitForAllThreads(job);  // verify all threads finished map & sort
 
     if(thread->id == 0) {shufflePhase(job);}
