@@ -181,7 +181,7 @@ JobContext* createJobContext(ThreadContext* threads, int multiThreadLevel, const
     jobContext->nextPhaseInputSize = 0;
 
     // Check for allocation failures
-    if ( !jobContext->barrier || !jobContext->indexCounter || !jobContext->atomicStage) {
+    if ( !jobContext->barrier || !jobContext->atomicStage) {
         freeJobContext(jobContext);
         allocation_failure();
     }
