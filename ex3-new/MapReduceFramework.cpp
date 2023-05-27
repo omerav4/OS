@@ -322,11 +322,11 @@ void reducePhase(ThreadContext* threadContext){
     if (getStage(job) == SHUFFLE_STAGE) {updateNewStage(job, REDUCE_STAGE, job->nextPhaseInputSize);}
     unsigned long vecToReduceSize = job->vecToReduce.size();
 
-    int result = pthread_mutex_lock(&job->mutex);
-    if(result != 0){mutex_failure(job, true);}
+//    int result = pthread_mutex_lock(&job->mutex);
+//    if(result != 0){mutex_failure(job, true);}
     uint index = job->indexCounter->load();
-    result = pthread_mutex_unlock(&job->mutex);
-    if(result != 0){mutex_failure(job, false);}
+//    result = pthread_mutex_unlock(&job->mutex);
+//    if(result != 0){mutex_failure(job, false);}
 
     while (index < vecToReduceSize){
         auto currentVector = job->vecToReduce[index];
