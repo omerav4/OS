@@ -92,7 +92,7 @@ void freeThreadContexts(ThreadContext* threads, int len) {
  */
 void freeJobContext(JobContext* job) {
     freeThreadContexts(job->threadContexts, job->multiThreadLevel);
-    delete job->indexCounter;
+// delete job->indexCounter;
     delete job->barrier;
     delete job->atomicStage;
     if (pthread_mutex_destroy(&job->mutex) != 0) {
