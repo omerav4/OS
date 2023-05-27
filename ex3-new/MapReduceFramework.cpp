@@ -199,6 +199,7 @@ stage_t getStage(JobContext* job)
 // left  2 bits     31 bits            31 bits          right
         // stage    total keys      processed keys
 void updateNewStage(JobContext* job, int stage, int total){
+    job->indexCounter = 0;
     uint64_t jobStageBits = static_cast<uint64_t>(stage) << 62;
     uint64_t totalKeysBits = (static_cast<uint64_t>(total) & (0x7fffffffULL)) << 31;
     uint64_t processedKeysBits = ~(0x7fffffffULL);
@@ -255,21 +256,20 @@ void mapPhase(ThreadContext* thread, JobContext* job)
 {
     unsigned long totalKeys = job->inputVec->size();
     if (getStage(job) == UNDEFINED_STAGE) {updateNewStage(job, MAP_STAGE, totalKeys);}
-    int index = getProcessedKeysCounter(job);
+    // int index = getProcessedKeysCounter(job);
 
-    while (index < totalKeys)
-    {
-//        std::cout << "i: " << thread->id << "finish\n";
-        auto pair = job->inputVec->at(index);
-        job->client->map(pair.first, pair.second, thread);
-        int result = pthread_mutex_lock(&job->mutex);
-        if(result != 0){mutex_failure(job, true);}
-
-        incrementProcessedKeysBy(job, 1);
-        result = pthread_mutex_unlock(&job->mutex);
-        index = getProcessedKeysCounter(job);
-        if(result != 0){mutex_failure(job, false);}
-
+    while(true){            // TODO add bool var instead of while true?
+        unsigned long index = (job->indexCounter)++;
+        if (index < totalKeys){
+            auto pair = job->inputVec->at(index);
+            job->client->map(pair.first, pair.second, thread);
+            int result = pthread_mutex_lock(&job->mutex);
+            if(result != 0){mutex_failure(job, true);}
+            incrementProcessedKeysBy(job, 1);
+            result = pthread_mutex_unlock(&job->mutex);
+            if(result != 0){mutex_failure(job, false);}
+        }
+        else{break;}
     }
 }
 /**
@@ -331,7 +331,7 @@ void reducePhase(ThreadContext* threadContext){
 //    result = pthread_mutex_unlock(&job->mutex);
 //    if(result != 0){mutex_failure(job, false);}
 
-    while(true){
+    while(true){            // TODO add bool var instead of while true?
         unsigned long index = (job->indexCounter)++;
         if (index < vecToReduceSize){
             auto currentVector = job->vecToReduce[index];
