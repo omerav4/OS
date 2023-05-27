@@ -318,11 +318,10 @@ void shufflePhase(JobContext* job){
  * @param job- the current job
  */
 void reducePhase(ThreadContext* threadContext){
-    std::cout << "start reduce\n";
     JobContext* job = threadContext->job;
     if (getStage(job) == SHUFFLE_STAGE) {updateNewStage(job, REDUCE_STAGE, job->nextPhaseInputSize);}
     unsigned long vecToReduceSize = job->vecToReduce.size();
-    std::cout << "vecToReduceSize: " << vecToReduceSize <<"finish vecToReduceSize\n";
+    std::cout << "vecToReduceSize: " << vecToReduceSize <<" finish vecToReduceSize\n";
 
     int result = pthread_mutex_lock(&job->mutex);
     if(result != 0){mutex_failure(job, true);}
