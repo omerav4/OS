@@ -55,6 +55,7 @@ public:
 		const char c = static_cast<const KChar*>(pairs->at(0).first)->c;
 		int count = 0;
 		for(const IntermediatePair& pair: *pairs) {
+            std::cout << "before alll\n ";
             count += static_cast<const VCount*>(pair.second)->count;
             std::cout << "count " << count << " finishPair\n";
             delete pair.first;
