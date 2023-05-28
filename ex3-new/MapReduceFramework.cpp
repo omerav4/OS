@@ -456,10 +456,13 @@ void waitForJob(JobHandle job){
     else{
         jobContext->isJoined = true;
         for(int i = 0; i < jobContext->multiThreadLevel; i++){
-            int result = pthread_join(*(jobContext->threadContexts[i].thread), nullptr);
+            std::cout << "before\n";
+            pthread_t* thread = jobContext->threadContexts[i].thread;
+            std::cout << "after\n";
+            int result = pthread_join(*thread, nullptr);
             if(result != 0)
             {
-                //freeJobContext(jobContext);
+                freeJobContext(jobContext);
                 allocation_failure();
             }
         }
