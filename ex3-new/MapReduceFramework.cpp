@@ -458,6 +458,7 @@ void waitForJob(JobHandle job){
         jobContext->isJoined = true;
         for(int i = 0; i < jobContext->multiThreadLevel; i++){
             pthread_t* thread = jobContext->threadContexts[i].thread;
+            std::cout << "thread pointer: " << thread << "\n";
             int result = pthread_join(*thread, nullptr);
             if(result != 0)
             {
