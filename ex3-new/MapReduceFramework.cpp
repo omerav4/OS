@@ -414,7 +414,6 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 
 void waitForJob(JobHandle job){
     // if isJoined = true, while we are not 100% and not in reduce, so we will check each time
-    std::cout << "wait\n";
     auto jobContext = static_cast<JobContext*>(job);
     if (jobContext->isJoined){
         JobState state;
@@ -424,7 +423,8 @@ void waitForJob(JobHandle job){
     else{
         jobContext->isJoined = true;
         for(int i = 0; i < jobContext->multiThreadLevel; i++){
-            int result = pthread_join(*jobContext->threadContexts[i].thread, nullptr);
+            std::cout << "wait\n";
+            int result = pthread_join(*(jobContext->threadContexts[i].thread), nullptr);
             if(result != 0)
             {
                 freeJobContext(jobContext);
@@ -432,6 +432,7 @@ void waitForJob(JobHandle job){
             }
         }
     }
+    std::cout << "finish\n";
 }
 
 void getJobState(JobHandle job, JobState* state){
