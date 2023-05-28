@@ -89,15 +89,15 @@ void freeThreadContexts(ThreadContext* threads, int len) {
  */
 void freeJobContext(JobContext* job) {
     std::cout << "start free job\n";
-    freeThreadContexts(job->threadContexts, job->multiThreadLevel);
-// delete job->indexCounter;
-    delete job->barrier;
-    delete job->atomicStage;
-    if (pthread_mutex_destroy(&job->mutex) != 0)
-    {
-        std::cerr << MUTEX_DESTROY_ERR;
-        exit(EXIT_FAILURE);
-    }
+//    freeThreadContexts(job->threadContexts, job->multiThreadLevel);
+//// delete job->indexCounter;
+//    delete job->barrier;
+//    delete job->atomicStage;
+//    if (pthread_mutex_destroy(&job->mutex) != 0)
+//    {
+//        std::cerr << MUTEX_DESTROY_ERR;
+//        exit(EXIT_FAILURE);
+//    }
 }
 
 ///-------------------------------- handle errors ------------------------------------
