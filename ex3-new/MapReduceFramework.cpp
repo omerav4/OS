@@ -195,6 +195,13 @@ stage_t getStage(uint64_t number)
     return static_cast<stage_t>(stage);
 }
 
+stage_t getStage(JobContext* job)
+{
+    auto number = (*(job->atomicStage)).load();
+    uint64_t stage = (number >> 62);  // Extract the stage bits
+    return static_cast<stage_t>(stage);
+}
+
 // left  2 bits     31 bits            31 bits          right
         // stage    total keys      processed keys
 void updateNewStage(JobContext* job, int stage, int total){
