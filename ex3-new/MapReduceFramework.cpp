@@ -427,6 +427,7 @@ void waitForJob(JobHandle job){
             int result = pthread_join(*(jobContext->threadContexts[i].thread), nullptr);
             if(result != 0)
             {
+                std::cout << "result != 0\n";
                 freeJobContext(jobContext);
                 allocation_failure();
             }
