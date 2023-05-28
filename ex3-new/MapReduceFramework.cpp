@@ -430,6 +430,8 @@ void waitForJob(JobHandle job){
                 freeJobContext(jobContext);
                 allocation_failure();
             }
+            std::cout << "wait2\n";
+
         }
     }
     std::cout << "finish\n";
