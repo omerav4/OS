@@ -448,7 +448,8 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 void waitForJob(JobHandle job){
     // if isJoined = true, while we are not 100% and not in reduce, so we will check each time
     auto jobContext = static_cast<JobContext*>(job);
-    if (jobContext->isJoined){
+    bool isJoined = jobContext->isJoined;
+    if (isJoined){
         JobState state;
         getJobState(jobContext, &state);
         while (state.stage != REDUCE_STAGE || state.percentage != 100.0){getJobState(jobContext, &state);}
@@ -456,9 +457,7 @@ void waitForJob(JobHandle job){
     else{
         jobContext->isJoined = true;
         for(int i = 0; i < jobContext->multiThreadLevel; i++){
-            std::cout << "before\n";
             pthread_t* thread = jobContext->threadContexts[i].thread;
-            std::cout << "after\n";
             int result = pthread_join(*thread, nullptr);
             if(result != 0)
             {
