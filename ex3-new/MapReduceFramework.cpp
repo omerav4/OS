@@ -459,7 +459,7 @@ void waitForJob(JobHandle job){
             int result = pthread_join(*(jobContext->threadContexts[i].thread), nullptr);
             if(result != 0)
             {
-                freeJobContext(jobContext);
+                //freeJobContext(jobContext);
                 allocation_failure();
             }
         }
