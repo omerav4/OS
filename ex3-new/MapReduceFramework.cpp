@@ -28,6 +28,8 @@ typedef std::atomic<uint64_t> atomicIntCounter;
 // next 31 bits are for already processed keys
 // last 31 bits are for total keys
 typedef std::atomic<uint64_t> atomicJobStage;
+typedef std::atomic<bool> atomicBoolFlag;
+
 typedef std::vector<IntermediateVec> IntermediateVecsVector;
 typedef struct JobContext JobContext;
 typedef struct ThreadContext ThreadContext;
@@ -59,7 +61,7 @@ struct JobContext{
 
     // independent fields
     ThreadContext* threadContexts;  // array of the threads contexts
-    bool isJoined;  // indicates that a thread called the pthread_join function
+    atomicBoolFlag isJoined;  // indicates that a thread called the pthread_join function
     IntermediateVecsVector allIntermediateVecs; // vector of vectors for shuffle phase
     IntermediateVecsVector vecToReduce; // vector of vectors for reduce phase
 
@@ -170,6 +172,7 @@ JobContext* createJobContext(ThreadContext* threads, int multiThreadLevel, const
 
     jobContext->atomicStage = new (std::nothrow) atomicJobStage(0);
     jobContext->processedKeys = 0;
+    jobContext->isJoined = false;
 
     jobContext->allIntermediateVecs =  IntermediateVecsVector(multiThreadLevel);  //TODO - is this good?
     jobContext->indexCounter = 0;
@@ -411,9 +414,13 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 
 void waitForJob(JobHandle job){
     // if isJoined = true, while we are not 100% and not in reduce, so we will check each time
-    std::cout << "start wait\n";
     auto jobContext = static_cast<JobContext*>(job);
-    if (!jobContext->isJoined){         // TODO change from atomic flag
+    if (jobContext->isJoined){
+        JobState state;
+        getJobState(jobContext, &state);
+        while (state.stage != REDUCE_STAGE || state.percentage != 100.0){getJobState(jobContext, &state);}
+    }
+    if (!jobContext->isJoined){
         jobContext->isJoined = true;
         for(int i = 0; i < jobContext->multiThreadLevel; i++){
             int result = pthread_join(*jobContext->threadContexts[i].thread, nullptr);
