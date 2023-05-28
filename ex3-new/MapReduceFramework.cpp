@@ -458,13 +458,12 @@ void waitForJob(JobHandle job){
         for(int i = 0; i < jobContext->multiThreadLevel; i++){
             std::cout << "wait\n";
             int result = pthread_join(*(jobContext->threadContexts[i].thread), nullptr);
+            std::cout << "wait2\n";
             if(result != 0)
             {
                 freeJobContext(jobContext);
                 allocation_failure();
             }
-            std::cout << "wait2\n";
-
         }
     }
     std::cout << "finish\n";
