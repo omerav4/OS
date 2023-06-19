@@ -172,13 +172,14 @@ uint64_t find_frame(page* root){
  */
 word_t get_page_address(uint64_t address){
     word_t current_address = 0;
-    std::cout << "hi\n";
-
     for (uint64_t level = TABLES_DEPTH; level > 0 ; level--){
         // Reads on each iteration the next level of the given address
         word_t caller_address = current_address;
+        std::cout << "current " << current_address << "\n";
         uint64_t next_address = get_next_address(address, level);
+        std::cout << "next " << next_address << "\n";
         PMread(current_address * PAGE_SIZE + next_address, &current_address);
+        std::cout << "real current " << current_address << "\n";
 
         // if we get to undefined table (address = 0), then find a free frame, resets him (create a table) and links it
         // to the current page
