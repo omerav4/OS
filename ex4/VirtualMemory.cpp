@@ -83,6 +83,7 @@ uint64_t cyclic_dist(uint64_t origin_address, uint64_t page_num){
  */
 void transverse_tree(page* node, uint64_t cur_level, uint64_t* max_frame_index, uint64_t original_address,
                      page* available_frame, page* frame_to_evict, uint64_t* max_dist){
+    std::cout << "transverse\n";
 
     // base case; if we are in physical memory, calculate cyclic dist
     if(cur_level > TABLES_DEPTH){
@@ -99,6 +100,7 @@ void transverse_tree(page* node, uint64_t cur_level, uint64_t* max_frame_index, 
     // in addition, we will update the max_frame_index to keep the maximum frame index
     bool is_empty = true;
     for (uint64_t row = 0; row < PAGE_SIZE; ++row){   // recursive call
+        std::cout << "first\n";
         PMread(node->address * PAGE_SIZE + row, &(node->next->address));
         if (node->next->address != 0) {  // page is full, continue searching in next level
             is_empty = false;
@@ -145,6 +147,7 @@ uint64_t find_frame(page* root){
     page frame_to_evict = {root->caller_table, 0, nullptr, nullptr, 0};
     uint64_t max_frame_index = 0;
     uint64_t max_dist = 0;
+    std::cout << "find frame\n";
 
     // transverses the tree in order to find the max frame index and if there is an empty frame (frame with rows = 0).
     // we also checks which page to evict if it will be necessary
