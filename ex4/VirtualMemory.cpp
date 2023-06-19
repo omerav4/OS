@@ -1,6 +1,8 @@
 #include <cmath>
 #include "VirtualMemory.h"
 #include "PhysicalMemory.h"
+#include <iostream>
+
 
 ///------------------------------------------- macros -------------------------------------------------------
 #define SUCCESS 1
@@ -170,6 +172,7 @@ uint64_t find_frame(page* root){
  */
 word_t get_page_address(uint64_t address){
     word_t current_address = 0;
+    std::cout << "hi\n";
 
     for (uint64_t level = TABLES_DEPTH; level > 0 ; level--){
         // Reads on each iteration the next level of the given address
@@ -198,6 +201,7 @@ void VMinitialize(){
 }
 
 int VMread(uint64_t virtualAddress, word_t* value){
+    std::cout << "address: " << virtualAddress;
     if (virtualAddress >= VIRTUAL_MEMORY_SIZE){return FAIL;}
     PMread(get_page_address(virtualAddress), value);
     return SUCCESS;
