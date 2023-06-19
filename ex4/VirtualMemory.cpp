@@ -102,6 +102,8 @@ void transverse_tree(page* node, uint64_t cur_level, uint64_t* max_frame_index, 
     for (uint64_t row = 0; row < PAGE_SIZE; ++row){   // recursive call
         std::cout << "first\n";
         PMread(node->address * PAGE_SIZE + row, &(node->next->address));
+        std::cout << "adress " << node->next->address << "in row " << row << "\n";
+
         if (node->next->address != 0) {  // page is full, continue searching in next level
             is_empty = false;
             // update max_frame_index and root
