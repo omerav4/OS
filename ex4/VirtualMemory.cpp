@@ -43,7 +43,6 @@ uint64_t get_address_without_offset(uint64_t address){
  * Returns the next address of the given full address, according to the given level
  */
 uint64_t get_next_address(uint64_t address, uint64_t level){
-    printf("level %llu\n", level);
     address = address >> (level*OFFSET_WIDTH);
     return get_offset(address);
 }
@@ -181,9 +180,10 @@ uint64_t find_frame(page* root){
  */
 word_t get_page_address(uint64_t address){
     word_t current_address = 0;
-
     for (uint64_t level = TABLES_DEPTH; level > 0 ; level--){
+
         // Reads on each iteration the next level of the given address
+        word_t last_address = current_address;
         word_t caller_address = current_address;
         uint64_t next_address = get_next_address(address, level);
         printf("next address %llu\n", next_address);
@@ -193,21 +193,21 @@ word_t get_page_address(uint64_t address){
         // to the current page
         if (current_address == 0){
             printf("inside if\n");
-            page root = {caller_address, 0, nullptr, nullptr, 0};
+            page root = {caller_address, 0, nullptr, nullptr, 0}; // TODO change values?
             word_t frame = find_frame(&root);  // find a relevant frame
             printf("frame %d \n", frame);
 
             if (level == PHYSICAL_LEVEL){PMrestore(frame,get_address_without_offset(address));}
             else{reset_frame(frame);}
 
-            PMwrite(caller_address * PAGE_SIZE + next_address, frame); // create the link between the page and the frame
-            address = caller_address * PAGE_SIZE + next_address;
+            PMwrite(last_address * PAGE_SIZE + next_address, frame); // create the link between the page and the frame
+            address = last_address * PAGE_SIZE + next_address;
             printf("address test %llu\n", address);
             current_address = frame;
         }
     }
 
-//    current_address = current_address * PAGE_SIZE + get_offset(address);
+    current_address = current_address * PAGE_SIZE + get_offset(address);
     return current_address;
 }
 
@@ -218,14 +218,14 @@ void VMinitialize(){
 
 int VMread(uint64_t virtualAddress, word_t* value){
     if (virtualAddress >= VIRTUAL_MEMORY_SIZE){return FAIL;}
-    word_t physical_address = get_page_address(virtualAddress) * PAGE_SIZE + get_offset(virtualAddress);
-    PMread(physical_address, value);
+    PMread(get_page_address(virtualAddress), value);
     return SUCCESS;
 }
 
 int VMwrite(uint64_t virtualAddress, word_t value){
     if (virtualAddress >= VIRTUAL_MEMORY_SIZE){return FAIL;}
-    word_t physical_address = get_page_address(virtualAddress) * PAGE_SIZE + get_offset(virtualAddress);
-    PMwrite(physical_address, value);
+    uint64_t address = get_page_address(virtualAddress);
+    printf("address %llu\n", address);
+    PMwrite(address, value);
     return SUCCESS;
 }
