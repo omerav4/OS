@@ -87,14 +87,13 @@ void initialize_next_node(page* node){
  * @param max_dist
  */
 void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_frame_index,
-                     page* available_frame, page* frame_to_evict, uint64_t* max_dist, word_t requested_page){
+                     page* available_frame, page* frame_to_evict, uint64_t* max_dist, word_t requested_page, uint64_t page_num){
     // base case; if we are in physical memory, calculate cyclic dist
     printf("start with %d level %llu\n", node->address, cur_level);
 
     if(cur_level >= TABLES_DEPTH){
-        uint64_t cur_dist = cyclic_dist( requested_page,get_address_without_offset(node->address));
+        uint64_t cur_dist = cyclic_dist( requested_page,page_num);
         printf("cur dist %llu\n", cur_dist);
-        printf("address %llu\n", get_address_without_offset(node->address));
         if( cur_dist > *max_dist){  // update max_dist and page_to_evict
             *max_dist = cur_dist;
             page evicted = {node->caller_table, node->address,
@@ -125,7 +124,7 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
             // call next level search
             //printf("before another transverse tree\n");
             transverse_tree(node->next, cur_level+1, cur_row, max_frame_index,
-                            available_frame, frame_to_evict, max_dist, requested_page);
+                            available_frame, frame_to_evict, max_dist, requested_page, (page_num << OFFSET_WIDTH) + row);
         }
     }
     if (is_empty){
@@ -168,7 +167,7 @@ uint64_t find_frame(page* root, word_t requested_page){
     // transverses the tree in order to find the max frame index and if there is an empty frame (frame with rows = 0).
     // we also checks which page to evict if it will be necessary
     transverse_tree(root, 0, 0, &max_frame_index,
-                    &available_frame, &frame_to_evict,&max_dist, requested_page);
+                    &available_frame, &frame_to_evict,&max_dist, requested_page, 0);
 //    printf("row %d\n", root->row);
 
     // option 1: we find an empty frame (frame with rows = 0)
