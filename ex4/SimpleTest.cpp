@@ -11,6 +11,7 @@ int main(int argc, char **argv) {
 
     VMread(6,&value);
 
+    printf("--------------------------------[");
     VMread(31, &value);
     printf("value %d\n", value);
 
