@@ -64,9 +64,9 @@ void reset_frame(uint64_t frame_index){
  */
 uint64_t cyclic_dist(uint64_t origin_address, uint64_t page_num){
     uint64_t dist;
-    if ((origin_address >> OFFSET_WIDTH) - page_num <= 0){dist = page_num - (origin_address >> OFFSET_WIDTH);}
+    if ((origin_address >> OFFSET_WIDTH) - page_num < 0){dist = page_num - (origin_address >> OFFSET_WIDTH);}
     else{dist = (origin_address >> OFFSET_WIDTH) - page_num;}
-    if(dist > NUM_PAGES - dist){dist = NUM_PAGES - dist;}
+    if(dist >= NUM_PAGES - dist){dist = NUM_PAGES - dist;}
     return dist;
 }
 
