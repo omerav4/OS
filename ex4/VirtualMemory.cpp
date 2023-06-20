@@ -90,7 +90,9 @@ void transverse_tree(page* node, uint64_t cur_level, uint64_t* max_frame_index, 
                      page* available_frame, page* frame_to_evict, uint64_t* max_dist){
     // base case; if we are in physical memory, calculate cyclic dist
     if(cur_level > TABLES_DEPTH){
+        std::cout << "physical level\n ";
         uint64_t cur_dist = cyclic_dist( original_address,node->address);
+        std::cout << "after cyclic dist\n ";
         if( cur_dist > *max_dist){  // update max_dist and page_to_evict
             *max_dist = cur_dist;
             frame_to_evict = node;
@@ -179,13 +181,11 @@ uint64_t find_frame(page* root){
  * @return the page address in the physical memory
  */
 word_t get_page_address(uint64_t address){
-    std::cout << "get page address start\n ";
     word_t current_address = 0;
     for (uint64_t level = TABLES_DEPTH; level > 0 ; level--){
         // Reads on each iteration the next level of the given address
         word_t caller_address = current_address;
         uint64_t next_address = get_next_address(address, level);
-        std::cout << "before PMread 1\n ";
         PMread(current_address * PAGE_SIZE + next_address, &current_address);
 
         // if we get to undefined table (address = 0), then find a free frame, resets him (create a table) and links it
