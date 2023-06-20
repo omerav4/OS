@@ -202,7 +202,7 @@ word_t get_page_address(uint64_t address){
             current_address = frame;
 
             int value2;
-            PMread(5, &value2);
+            PMread(0, &value2);
             printf("value %d\n", value2);
         }
     }
