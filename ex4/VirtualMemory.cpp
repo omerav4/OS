@@ -158,15 +158,15 @@ void evict(page* frame_to_evict){
 /**
  * Finds a frame to put the given page in or evicts another page if necessary
  */
-uint64_t find_frame(page* root){
+uint64_t find_frame(page* root, uint64_t address){
     page available_frame = {root->caller_table, 0, nullptr, nullptr, 0};
     page frame_to_evict = {root->caller_table, 0, nullptr, nullptr, 0};
     uint64_t max_frame_index = 0;
     uint64_t max_dist = 0;
-
+    uint64_t original_address = get_address_without_offset(address);
     // transverses the tree in order to find the max frame index and if there is an empty frame (frame with rows = 0).
     // we also checks which page to evict if it will be necessary
-    transverse_tree(root, 0, 0, &max_frame_index, root->address,
+    transverse_tree(root, 0, 0, &max_frame_index, original_address,
                     &available_frame, &frame_to_evict,&max_dist);
 
     // option 1: we find an empty frame (frame with rows = 0)
@@ -201,7 +201,7 @@ word_t get_page_address(uint64_t address){
         // to the current page
         if (current_address == 0){
             page root = {caller_address, 0, nullptr, nullptr, 0}; // TODO change values?
-            word_t frame = find_frame(&root);  // find a relevant frame
+            word_t frame = find_frame(&root, address);  // find a relevant frame
 
             if (level == PHYSICAL_LEVEL){PMrestore(frame,get_address_without_offset(address));}
             else{reset_frame(frame);}
