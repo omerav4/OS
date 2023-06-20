@@ -115,6 +115,7 @@ void transverse_tree(page* node, uint64_t cur_level, uint64_t* max_frame_index, 
             // node->former->next->address = node->address;
             node->row = row;
             // call next level search
+            std::cout << "before another transverse tree\n";
             transverse_tree(node->next, cur_level++, max_frame_index,
                             original_address, available_frame, frame_to_evict, max_dist);
         }
