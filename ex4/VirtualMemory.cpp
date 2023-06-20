@@ -202,6 +202,12 @@ word_t get_page_address(uint64_t address){
             current_address = frame;
         }
     }
+    int value2;
+    PMread(4, &value2);
+    printf("value %d\n", value2);
+    PMread(5, &value2);
+    printf("value %d\n", value2);
+
     current_address = current_address * PAGE_SIZE + get_offset(address);
     return current_address;
 }
@@ -219,12 +225,8 @@ int VMread(uint64_t virtualAddress, word_t* value){
 
 int VMwrite(uint64_t virtualAddress, word_t value){
     if (virtualAddress >= VIRTUAL_MEMORY_SIZE){return FAIL;}
-    PMwrite(get_page_address(virtualAddress), value);
-    int value2;
-    PMread(4, &value2);
-    printf("value %d\n", value2);
-    PMread(5, &value2);
-    printf("value %d\n", value2);
-
+    uint64_t address = get_page_address(virtualAddress);
+    printf("address %llu\n", address);
+    PMwrite(address, value);
     return SUCCESS;
 }
