@@ -200,13 +200,12 @@ word_t get_page_address(uint64_t address){
 
             PMwrite(current_address * PAGE_SIZE + next_address, frame); // create the link between the page and the frame
             current_address = frame;
+
+            int value2;
+            PMread(5, &value2);
+            printf("value %d\n", value2);
         }
     }
-    int value2;
-    PMread(4, &value2);
-    printf("value %d\n", value2);
-    PMread(5, &value2);
-    printf("value %d\n", value2);
 
     current_address = current_address * PAGE_SIZE + get_offset(address);
     return current_address;
