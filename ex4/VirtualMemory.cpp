@@ -91,7 +91,7 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
     // base case; if we are in physical memory, calculate cyclic dist
     printf("start with %d level %llu\n", node->address, cur_level);
 
-    if(cur_level > TABLES_DEPTH){
+    if(cur_level >= TABLES_DEPTH){
         uint64_t cur_dist = cyclic_dist( requested_page,get_address_without_offset(node->address) + node->row);
         printf("cur dist %llu\n", cur_dist);
         printf("address %d\n", get_address_without_offset(node->address) + node->row);
