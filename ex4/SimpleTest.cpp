@@ -9,13 +9,12 @@ int main(int argc, char **argv) {
     VMinitialize();
     VMwrite(13,3);
 
-    //VMread(13,&value);
     VMread(6,&value);
-    printf("value %d\n", value);
-    PMread(3,&value);
-    printf("value %d\n", value);
 
-//    PMread();
+    for (uint64_t i = 0; i < (2 * 8); ++i) {
+        PMread(i,&value);
+        printf("i: %llu, value: %d\n", i, value);
+    }
 
 //    for (uint64_t i = 0; i < (2 * NUM_FRAMES); ++i) {
 //        printf("writing to %llu\n", (long long int) i);
