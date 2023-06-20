@@ -112,8 +112,8 @@ void transverse_tree(page* node, uint64_t cur_level, uint64_t* max_frame_index, 
             is_empty = false;
             // update max_frame_index and root
             if (node->next->address > *max_frame_index){ *max_frame_index = node->next->address;}
-            node->former->next->address = node->address;
-            node->next->former->address = node->address;
+            node->next->former = node;
+            // node->former->next->address = node->address;
             node->row = row;
             // call next level search
             transverse_tree(node->next, cur_level++, max_frame_index,
