@@ -94,7 +94,6 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
         printf("origin address %llu\n", original_address);
 
         uint64_t cur_dist = cyclic_dist( original_address,node->address);
-        printf("dist %llu\n", cur_dist);
 
         if( cur_dist > *max_dist){  // update max_dist and page_to_evict
             *max_dist = cur_dist;
@@ -136,8 +135,11 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
  * Unlinks the current node from its child by changing its value in the physical memory to 0.
  */
 void unlink(page* node){
+    printf("start unlink\n");
     uint64_t address = node->former->address * PAGE_SIZE + node->row;
     PMwrite(address, 0);
+    printf("end unlink\n");
+
 }
 
 /**
