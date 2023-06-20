@@ -179,12 +179,12 @@ uint64_t find_frame(page* root){
  * @return the page address in the physical memory
  */
 word_t get_page_address(uint64_t address){
-    // 0000000000000000000000000000000000000000000000000000000010100000
     word_t current_address = 0;
     for (uint64_t level = TABLES_DEPTH; level > 0 ; level--){
         // Reads on each iteration the next level of the given address
         word_t caller_address = current_address;
         uint64_t next_address = get_next_address(address, level);
+        printf("next address %llu\n", next_address);
         PMread(current_address * PAGE_SIZE + next_address, &current_address);
 
         // if we get to undefined table (address = 0), then find a free frame, resets him (create a table) and links it
@@ -192,7 +192,7 @@ word_t get_page_address(uint64_t address){
         if (current_address == 0){
             page root = {caller_address, 0, nullptr, nullptr, 0}; // TODO change values?
             word_t frame = find_frame(&root);  // find a relevant frame
-            //printf("frame %d \n", frame);
+            printf("frame %d \n", frame);
 
             if (level == PHYSICAL_LEVEL){ PMrestore(frame,get_address_without_offset(address));}
             reset_frame(frame);

@@ -1,4 +1,5 @@
 #include "VirtualMemory.h"
+#include "PhysicalMemory.h"
 
 #include <cstdio>
 #include <cassert>
@@ -6,6 +7,7 @@
 int main(int argc, char **argv) {
     VMinitialize();
     VMwrite(13,3);
+//    PMread();
 
 //    for (uint64_t i = 0; i < (2 * NUM_FRAMES); ++i) {
 //        printf("writing to %llu\n", (long long int) i);
