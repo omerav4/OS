@@ -103,10 +103,12 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
     // in addition, we will update the max_frame_index to keep the maximum frame index
     bool is_empty = true;
     for (uint64_t row = 0; row < PAGE_SIZE; ++row){   // recursive call
+        printf("hiii\n");
         initialize_next_node(node);
         PMread(node->address * PAGE_SIZE + row, &(node->next->address));
 
         if (node->next->address != 0) {  // page is full, continue searching in next level
+            printf("inside loop if != 0\n");
             is_empty = false;
             // update max_frame_index and root
             if (node->next->address > *max_frame_index){ *max_frame_index = node->next->address;}
@@ -157,7 +159,6 @@ uint64_t find_frame(page* root){
     // we also checks which page to evict if it will be necessary
     transverse_tree(root, 0, 0, &max_frame_index, root->address,
                     &available_frame, &frame_to_evict,&max_dist);
-    printf("row %d\n", root->row);
 
     // option 1: we find an empty frame (frame with rows = 0)
     if (available_frame.address != 0 && available_frame.address != root->caller_table){
