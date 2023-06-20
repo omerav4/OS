@@ -107,6 +107,7 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
         initialize_next_node(node);
         PMread(node->address * PAGE_SIZE + row, &(node->next->address));
         printf("row %llu\n", row);
+        printf("next->address before %d\n", node->next->address);
 
         if (node->next->address != 0) {  // page is full, continue searching in next level
             printf("next->address %d\n", node->next->address);
@@ -125,7 +126,7 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
             printf("is_empty\n");
             available_frame = node;
         }
-    printf("end transverse_tree\n");
+    printf("end address %d\n", node->address);
 
 }
 
