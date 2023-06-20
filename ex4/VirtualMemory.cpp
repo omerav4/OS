@@ -186,7 +186,6 @@ word_t get_page_address(uint64_t address){
         uint64_t next_address = get_next_address(address, level);
         printf("next address %llu\n", next_address);
         PMread(current_address * PAGE_SIZE + next_address, &current_address);
-        printf("after pmread1\n");
 
         // if we get to undefined table (address = 0), then find a free frame, resets him (create a table) and links it
         // to the current page
