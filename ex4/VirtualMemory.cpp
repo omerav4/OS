@@ -89,6 +89,8 @@ void initialize_next_node(page* node){
 void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_frame_index,
                      page* available_frame, page* frame_to_evict, uint64_t* max_dist, word_t requested_page){
     // base case; if we are in physical memory, calculate cyclic dist
+    printf("start with %d\n", node->address);
+
     if(cur_level > TABLES_DEPTH){
         uint64_t cur_dist = cyclic_dist( requested_page,node->address);
         printf("cur dist %llu\n", cur_dist);
@@ -129,6 +131,8 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
         page available = {node->caller_table, node->address, node->former, node->next};
         *available_frame = available;
         }
+    printf("end with %d\n", node->address);
+
 }
 
 /**
