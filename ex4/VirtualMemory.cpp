@@ -203,7 +203,8 @@ word_t get_page_address(uint64_t address){
 
             int value2;
             PMread(0, &value2);
-            printf("value %d\n", value2);
+            address = current_address * PAGE_SIZE + next_address;
+            printf("address %llu\n", address);
         }
     }
 
