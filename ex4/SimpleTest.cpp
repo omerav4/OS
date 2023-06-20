@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
     VMwrite(13,3);
 
     //VMread(13,&value);
-    PMread(5,&value);
+    VMread(6,&value);
     printf("value %d\n", value);
 //    PMread();
 
