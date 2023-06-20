@@ -121,6 +121,7 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
         }
     }
     if (is_empty){
+            printf("is_empty\n");
             available_frame = node;
         }
     printf("end transverse_tree\n");
