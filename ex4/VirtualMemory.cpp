@@ -90,9 +90,7 @@ void transverse_tree(page* node, uint64_t cur_level, uint64_t* max_frame_index, 
                      page* available_frame, page* frame_to_evict, uint64_t* max_dist){
     // base case; if we are in physical memory, calculate cyclic dist
     if(cur_level > TABLES_DEPTH){
-        std::cout << "physical level\n ";
         uint64_t cur_dist = cyclic_dist( original_address,node->address);
-        std::cout << "after cyclic dist\n ";
         if( cur_dist > *max_dist){  // update max_dist and page_to_evict
             *max_dist = cur_dist;
             frame_to_evict = node;
@@ -106,7 +104,7 @@ void transverse_tree(page* node, uint64_t cur_level, uint64_t* max_frame_index, 
     bool is_empty = true;
     for (uint64_t row = 0; row < PAGE_SIZE; ++row){   // recursive call
         initialize_next_node(node);
-        std::cout << "before PMread 2\n ";
+        //std::cout << "before PMread 2\n ";
         PMread(node->address * PAGE_SIZE + row, &(node->next->address));
 
         if (node->next->address != 0) {  // page is full, continue searching in next level
@@ -117,7 +115,7 @@ void transverse_tree(page* node, uint64_t cur_level, uint64_t* max_frame_index, 
             // node->former->next->address = node->address;
             node->row = row;
             // call next level search
-            std::cout << "before another transverse tree\n";
+            //std::cout << "before another transverse tree\n";
             transverse_tree(node->next, cur_level++, max_frame_index,
                             original_address, available_frame, frame_to_evict, max_dist);
         }
