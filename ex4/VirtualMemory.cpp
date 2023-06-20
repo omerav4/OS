@@ -103,6 +103,7 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
     // in addition, we will update the max_frame_index to keep the maximum frame index
     bool is_empty = true;
     for (uint64_t row = 0; row < PAGE_SIZE; row++){   // recursive call
+        printf("row %llu\n", row);
         initialize_next_node(node);
         PMread(node->address * PAGE_SIZE + row, &(node->next->address));
 //        printf("after pmread in tansverse\n");
@@ -157,6 +158,7 @@ uint64_t find_frame(page* root){
 
     // transverses the tree in order to find the max frame index and if there is an empty frame (frame with rows = 0).
     // we also checks which page to evict if it will be necessary
+    printf("entering transverse_tree\n");
     transverse_tree(root, 0, 0, &max_frame_index, root->address,
                     &available_frame, &frame_to_evict,&max_dist);
 
