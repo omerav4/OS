@@ -86,7 +86,7 @@ void initialize_next_node(page* node){
  * @param frame_to_evict
  * @param max_dist
  */
-void transverse_tree(page* node, uint64_t cur_level, uint64_t* max_frame_index, uint64_t original_address,
+void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_frame_index, uint64_t original_address,
                      page* available_frame, page* frame_to_evict, uint64_t* max_dist){
     // base case; if we are in physical memory, calculate cyclic dist
     if(cur_level > TABLES_DEPTH){
@@ -104,7 +104,6 @@ void transverse_tree(page* node, uint64_t cur_level, uint64_t* max_frame_index, 
     bool is_empty = true;
     for (uint64_t row = 0; row < PAGE_SIZE; ++row){   // recursive call
         initialize_next_node(node);
-        //printf("before pmread2\n");
         PMread(node->address * PAGE_SIZE + row, &(node->next->address));
 
         if (node->next->address != 0) {  // page is full, continue searching in next level
@@ -116,7 +115,7 @@ void transverse_tree(page* node, uint64_t cur_level, uint64_t* max_frame_index, 
             node->row = row;
             // call next level search
             //printf("before another transverse tree\n");
-            transverse_tree(node->next, cur_level++, max_frame_index,
+            transverse_tree(node->next, cur_level++, cur_row, max_frame_index,
                             original_address, available_frame, frame_to_evict, max_dist);
         }
     }
@@ -156,8 +155,9 @@ uint64_t find_frame(page* root){
 
     // transverses the tree in order to find the max frame index and if there is an empty frame (frame with rows = 0).
     // we also checks which page to evict if it will be necessary
-    transverse_tree(root, 0, &max_frame_index, root->address,
+    transverse_tree(root, 0, 0, &max_frame_index, root->address,
                     &available_frame, &frame_to_evict,&max_dist);
+    printf("row %d\n", root->row);
 
     // option 1: we find an empty frame (frame with rows = 0)
     if (available_frame.address != 0 && available_frame.address != root->caller_table){
@@ -201,6 +201,7 @@ word_t get_page_address(uint64_t address){
         }
     }
     current_address = current_address * PAGE_SIZE + get_offset(address);
+    printf("current address %llu\n", current_address);
     return current_address;
 }
 
