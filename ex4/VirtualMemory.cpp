@@ -136,13 +136,16 @@ void unlink(page* node){
 
 /**
  * Evicts the given page
- * @return
  */
-word_t evict(page* frame_to_evict){
+void evict(page* frame_to_evict){
+    printf("start evict\n");
     word_t frame;
     PMread(frame_to_evict->address, &frame);
+    printf("frame %d\n", frame);
     PMevict(frame, get_address_without_offset(frame_to_evict->address));
+    printf("after evict\n");
     unlink(frame_to_evict);
+    printf("after unlink\n");
 }
 
 
@@ -170,7 +173,6 @@ uint64_t find_frame(page* root){
     if (max_frame_index + 1 < NUM_FRAMES){return (max_frame_index + 1);}
 
     // option 3: otherwise, evict a page and returns its frame
-    printf("hiii\n");
     evict(&frame_to_evict);     // TODO verify already evicted frames
     return frame_to_evict.address;
 }
