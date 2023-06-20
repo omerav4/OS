@@ -185,7 +185,6 @@ word_t get_page_address(uint64_t address){
         // Reads on each iteration the next level of the given address
         word_t caller_address = current_address;
         uint64_t next_address = get_next_address(address, level);
-        printf("next address %llu\n", next_address);
         PMread(current_address * PAGE_SIZE + next_address, &current_address);
 
         // if we get to undefined table (address = 0), then find a free frame, resets him (create a table) and links it
@@ -199,7 +198,7 @@ word_t get_page_address(uint64_t address){
             if (level == PHYSICAL_LEVEL){PMrestore(frame,get_address_without_offset(address));}
             else{reset_frame(frame);}
 
-            PMwrite(current_address * PAGE_SIZE + next_address, frame); // create the link between the page and the frame
+            PMwrite(caller_address * PAGE_SIZE + next_address, frame); // create the link between the page and the frame
             current_address = frame;
         }
     }
