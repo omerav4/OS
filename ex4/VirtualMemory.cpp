@@ -199,12 +199,9 @@ word_t get_page_address(uint64_t address){
             else{reset_frame(frame);}
 
             PMwrite(current_address * PAGE_SIZE + next_address, frame); // create the link between the page and the frame
-            current_address = frame;
-
-            int value2;
-            PMread(0, &value2);
             address = current_address * PAGE_SIZE + next_address;
-            printf("address %llu\n", address);
+            printf("address test %llu\n", address);
+            current_address = frame;
         }
     }
 
