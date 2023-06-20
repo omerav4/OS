@@ -64,9 +64,9 @@ void reset_frame(uint64_t frame_index){
  */
 uint64_t cyclic_dist(uint64_t origin_address, uint64_t page_num){
     uint64_t dist;
-    if ((origin_address >> OFFSET_WIDTH) - page_num < 0){dist = page_num - (origin_address >> OFFSET_WIDTH);}
+    if ((origin_address >> OFFSET_WIDTH) - page_num <= 0){dist = page_num - (origin_address >> OFFSET_WIDTH);}
     else{dist = (origin_address >> OFFSET_WIDTH) - page_num;}
-    if(dist >= NUM_PAGES - dist){dist = NUM_PAGES - dist;}
+    if(dist > NUM_PAGES - dist){dist = NUM_PAGES - dist;}
     return dist;
 }
 
@@ -86,19 +86,16 @@ void initialize_next_node(page* node){
  * @param frame_to_evict
  * @param max_dist
  */
-void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_frame_index, uint64_t original_address,
-                     page* available_frame, page* frame_to_evict, uint64_t* max_dist){
+void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_frame_index,
+                     page* available_frame, page* frame_to_evict, uint64_t* max_dist, word_t requested_page){
     // base case; if we are in physical memory, calculate cyclic dist
     if(cur_level > TABLES_DEPTH){
-        printf("node address %d\n", node->address);
-        printf("origin address %llu\n", original_address);
-
-        uint64_t cur_dist = cyclic_dist( original_address,node->address);
-
+        uint64_t cur_dist = cyclic_dist( requested_page,node->address);
         if( cur_dist > *max_dist){  // update max_dist and page_to_evict
             *max_dist = cur_dist;
-            frame_to_evict = node;
-            printf("address to evict %d\n", frame_to_evict->address);
+            page evicted = {node->caller_table, node->address,
+                            node->former, node->next, node->row};
+            *frame_to_evict = evicted;
         }
         return;
     }
@@ -115,19 +112,20 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
 
         if (node->next->address != 0) {  // page is full, continue searching in next level
             is_empty = false;
-
             // update max_frame_index and root
             if (node->next->address > *max_frame_index){ *max_frame_index = node->next->address;}
             node->next->former = node;
+            // node->former->next->address = node->address;
             node->row = row;
-
             // call next level search
+            //printf("before another transverse tree\n");
             transverse_tree(node->next, cur_level+1, cur_row, max_frame_index,
-                            original_address, available_frame, frame_to_evict, max_dist);
+                            available_frame, frame_to_evict, max_dist, requested_page);
         }
     }
     if (is_empty){
-            available_frame = node;
+        page available = {node->caller_table, node->address, node->former, node->next};
+        *available_frame = available;
         }
 }
 
@@ -135,41 +133,36 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
  * Unlinks the current node from its child by changing its value in the physical memory to 0.
  */
 void unlink(page* node){
-    printf("start unlink\n");
-    page* former = node->former;
-    printf("after former\n");
-    uint64_t address = former->address * PAGE_SIZE + node->row;
-    printf("after address\n");
+    uint64_t address = node->former->address * PAGE_SIZE + node->row;
     PMwrite(address, 0);
-    printf("end unlink\n");
-
 }
 
 /**
  * Evicts the given page
+ * @return
  */
-void evict(page* frame_to_evict){
+word_t evict(page* frame_to_evict){
     word_t frame;
     PMread(frame_to_evict->address, &frame);
     PMevict(frame, get_address_without_offset(frame_to_evict->address));
     unlink(frame_to_evict);
-    printf("after unlink\n");
 }
 
 
 /**
  * Finds a frame to put the given page in or evicts another page if necessary
  */
-uint64_t find_frame(page* root, uint64_t address){
+uint64_t find_frame(page* root, word_t requested_page){
     page available_frame = {root->caller_table, 0, nullptr, nullptr, 0};
     page frame_to_evict = {root->caller_table, 0, nullptr, nullptr, 0};
     uint64_t max_frame_index = 0;
     uint64_t max_dist = 0;
-    uint64_t original_address = get_address_without_offset(address);
+
     // transverses the tree in order to find the max frame index and if there is an empty frame (frame with rows = 0).
     // we also checks which page to evict if it will be necessary
-    transverse_tree(root, 0, 0, &max_frame_index, original_address,
-                    &available_frame, &frame_to_evict,&max_dist);
+    transverse_tree(root, 0, 0, &max_frame_index,
+                    &available_frame, &frame_to_evict,&max_dist, requested_page);
+//    printf("row %d\n", root->row);
 
     // option 1: we find an empty frame (frame with rows = 0)
     if (available_frame.address != 0 && available_frame.address != root->caller_table){
@@ -192,6 +185,7 @@ uint64_t find_frame(page* root, uint64_t address){
  */
 word_t get_page_address(uint64_t address){
     word_t current_address = 0;
+    word_t requested_page = get_address_without_offset(address);
     for (uint64_t level = TABLES_DEPTH; level > 0 ; level--){
 
         // Reads on each iteration the next level of the given address
@@ -202,8 +196,10 @@ word_t get_page_address(uint64_t address){
         // if we get to undefined table (address = 0), then find a free frame, resets him (create a table) and links it
         // to the current page
         if (current_address == 0){
+//            printf("inside if\n");
             page root = {caller_address, 0, nullptr, nullptr, 0}; // TODO change values?
-            word_t frame = find_frame(&root, address);  // find a relevant frame
+            word_t frame = find_frame(&root, requested_page);  // find a relevant frame
+//            printf("frame %d \n", frame);
 
             if (level == PHYSICAL_LEVEL){PMrestore(frame,get_address_without_offset(address));}
             else{reset_frame(frame);}
@@ -231,6 +227,7 @@ int VMread(uint64_t virtualAddress, word_t* value){
 int VMwrite(uint64_t virtualAddress, word_t value){
     if (virtualAddress >= VIRTUAL_MEMORY_SIZE){return FAIL;}
     uint64_t address = get_page_address(virtualAddress);
+//    printf("address %llu\n", address);
     PMwrite(address, value);
     return SUCCESS;
 }
