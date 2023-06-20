@@ -70,6 +70,11 @@ uint64_t cyclic_dist(uint64_t origin_address, uint64_t page_num){
     return dist;
 }
 
+void initialize_next_node(page* node){
+    page next = {node->caller_table, 0, nullptr, nullptr, 0};
+    node->next = &next;
+}
+
 /**
  * Transverse the tree
  * For each
@@ -101,8 +106,9 @@ void transverse_tree(page* node, uint64_t cur_level, uint64_t* max_frame_index, 
     bool is_empty = true;
     for (uint64_t row = 0; row < PAGE_SIZE; ++row){   // recursive call
         std::cout << "first\n";
+        initialize_next_node(node);
         PMread(node->address * PAGE_SIZE + row, &(node->next->address));
-        std::cout << "adress " << node->next->address << "in row " << row << "\n";
+        std::cout << "address " << node->next->address << "in row " << row << "\n";
 
         if (node->next->address != 0) {  // page is full, continue searching in next level
             is_empty = false;
