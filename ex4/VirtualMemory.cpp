@@ -91,6 +91,8 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
     // base case; if we are in physical memory, calculate cyclic dist
     if(cur_level > TABLES_DEPTH){
         uint64_t cur_dist = cyclic_dist( original_address,node->address);
+        printf("dist %llu\n", cur_dist);
+
         if( cur_dist > *max_dist){  // update max_dist and page_to_evict
             *max_dist = cur_dist;
             frame_to_evict = node;
