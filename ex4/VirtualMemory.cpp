@@ -43,6 +43,7 @@ uint64_t get_address_without_offset(uint64_t address){
  * Returns the next address of the given full address, according to the given level
  */
 uint64_t get_next_address(uint64_t address, uint64_t level){
+    printf("address %llu and level %llu\n", address, level);
     address = address >> (level*OFFSET_WIDTH);
     printf("address in get_next %llu\n", address);
     return get_offset(address);
