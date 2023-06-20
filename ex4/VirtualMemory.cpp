@@ -89,13 +89,13 @@ void initialize_next_node(page* node){
 void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_frame_index,
                      page* available_frame, page* frame_to_evict, uint64_t* max_dist, word_t requested_page, uint64_t page_num){
     // base case; if we are in physical memory, calculate cyclic dist
-    printf("start with %d level %llu\n", node->address, cur_level);
+    //printf("start with %d level %llu\n", node->address, cur_level);
 
     if(cur_level >= TABLES_DEPTH){
         uint64_t cur_dist = cyclic_dist( requested_page ,page_num);
-        printf("page num %llu\n", page_num);
-        printf("cur dist %llu\n", cur_dist);
-        printf("requested page %d\n", requested_page);
+//        printf("page num %llu\n", page_num);
+//        printf("cur dist %llu\n", cur_dist);
+//        printf("requested page %d\n", requested_page);
         if( cur_dist > *max_dist){  // update max_dist and page_to_evict
             *max_dist = cur_dist;
             page evicted = {node->caller_table, node->address,
@@ -116,7 +116,6 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
         PMread(node->address * PAGE_SIZE + row, &(node->next->address));
 
         if (node->next->address != 0) {  // page is full, continue searching in next level
-            //printf("address in if %d\n", node->address);
             is_empty = false;
             // update max_frame_index and root
             if (node->next->address > *max_frame_index){ *max_frame_index = node->next->address;}
@@ -124,7 +123,6 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
             // node->former->next->address = node->address;
             node->row = row;
             // call next level search
-            //printf("before another transverse tree\n");
             transverse_tree(node->next, cur_level+1, cur_row, max_frame_index,
                             available_frame, frame_to_evict, max_dist, requested_page, (page_num << OFFSET_WIDTH) + row);
         }
@@ -133,7 +131,6 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
         page available = {node->caller_table, node->address, node->former, node->next};
         *available_frame = available;
         }
-    printf("end with %d\n", node->address);
 
 }
 
@@ -235,7 +232,6 @@ int VMread(uint64_t virtualAddress, word_t* value){
 int VMwrite(uint64_t virtualAddress, word_t value){
     if (virtualAddress >= VIRTUAL_MEMORY_SIZE){return FAIL;}
     uint64_t address = get_page_address(virtualAddress);
-//    printf("address %llu\n", address);
     PMwrite(address, value);
     return SUCCESS;
 }
