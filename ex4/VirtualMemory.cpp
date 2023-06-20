@@ -123,6 +123,8 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
     if (is_empty){
             available_frame = node;
         }
+    printf("end transverse_tree\n");
+
 }
 
 /**
@@ -158,6 +160,8 @@ uint64_t find_frame(page* root){
     // we also checks which page to evict if it will be necessary
     transverse_tree(root, 0, 0, &max_frame_index, root->address,
                     &available_frame, &frame_to_evict,&max_dist);
+
+    printf("hiiii\n");
 
     // option 1: we find an empty frame (frame with rows = 0)
     if (available_frame.address != 0 && available_frame.address != root->caller_table){
