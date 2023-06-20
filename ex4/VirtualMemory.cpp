@@ -105,7 +105,7 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
     for (uint64_t row = 0; row < PAGE_SIZE; ++row){   // recursive call
         initialize_next_node(node);
         PMread(node->address * PAGE_SIZE + row, &(node->next->address));
-        printf("after pmread in tansverse");
+        printf("after pmread in tansverse\n");
 
         if (node->next->address != 0) {  // page is full, continue searching in next level
             printf("inside loop if != 0\n");
@@ -200,6 +200,7 @@ word_t get_page_address(uint64_t address){
             else{reset_frame(frame);}
 
             PMwrite(caller_address * PAGE_SIZE + next_address, frame); // create the link between the page and the frame
+            printf("new address %llu\n", caller_address * PAGE_SIZE + next_address);
             current_address = frame;
         }
     }
