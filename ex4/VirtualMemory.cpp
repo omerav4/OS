@@ -104,6 +104,7 @@ void transverse_tree(page* node, uint64_t cur_level, uint64_t* max_frame_index, 
     bool is_empty = true;
     for (uint64_t row = 0; row < PAGE_SIZE; ++row){   // recursive call
         initialize_next_node(node);
+        std::cout << "before PMread 2\n ";
         PMread(node->address * PAGE_SIZE + row, &(node->next->address));
 
         if (node->next->address != 0) {  // page is full, continue searching in next level
@@ -177,11 +178,13 @@ uint64_t find_frame(page* root){
  * @return the page address in the physical memory
  */
 word_t get_page_address(uint64_t address){
+    std::cout << "get page address start\n ";
     word_t current_address = 0;
     for (uint64_t level = TABLES_DEPTH; level > 0 ; level--){
         // Reads on each iteration the next level of the given address
         word_t caller_address = current_address;
         uint64_t next_address = get_next_address(address, level);
+        std::cout << "before PMread 1\n ";
         PMread(current_address * PAGE_SIZE + next_address, &current_address);
 
         // if we get to undefined table (address = 0), then find a free frame, resets him (create a table) and links it
