@@ -9,7 +9,6 @@ int main(int argc, char **argv) {
     VMinitialize();
     VMwrite(13,3);
 
-
     //VMread(13,&value);
 //    PMread(5,&value);
 //    printf("value %d\n", value);

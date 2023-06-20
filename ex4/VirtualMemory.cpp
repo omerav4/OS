@@ -43,6 +43,7 @@ uint64_t get_address_without_offset(uint64_t address){
  * Returns the next address of the given full address, according to the given level
  */
 uint64_t get_next_address(uint64_t address, uint64_t level){
+    printf("level %llu\n", level);
     address = address >> (level*OFFSET_WIDTH);
     return get_offset(address);
 }
@@ -179,7 +180,7 @@ uint64_t find_frame(page* root){
  * @return the page address in the physical memory
  */
 word_t get_page_address(uint64_t address){
-    word_t current_address = 0;  // TODO remove omer:  return_address = 0;
+    word_t current_address = 0;
 
     for (uint64_t level = TABLES_DEPTH; level > 0 ; level--){
         // Reads on each iteration the next level of the given address
@@ -187,6 +188,7 @@ word_t get_page_address(uint64_t address){
         uint64_t next_address = get_next_address(address, level);
         printf("next address %llu\n", next_address);
         PMread(current_address * PAGE_SIZE + next_address, &current_address);
+
         // if we get to undefined table (address = 0), then find a free frame, resets him (create a table) and links it
         // to the current page
         if (current_address == 0){
@@ -224,7 +226,6 @@ int VMread(uint64_t virtualAddress, word_t* value){
 int VMwrite(uint64_t virtualAddress, word_t value){
     if (virtualAddress >= VIRTUAL_MEMORY_SIZE){return FAIL;}
     word_t physical_address = get_page_address(virtualAddress) * PAGE_SIZE + get_offset(virtualAddress);
-    printf("address %d\n", physical_address);
     PMwrite(physical_address, value);
     return SUCCESS;
 }
