@@ -195,14 +195,12 @@ word_t get_page_address(uint64_t address){
             word_t frame = find_frame(&root);  // find a relevant frame
             printf("frame %d \n", frame);
 
-            if (level == PHYSICAL_LEVEL){
-                printf("frame %d\n", frame);
-                printf("address without offest %llu\n", get_address_without_offset(address));
-                PMrestore(frame,get_address_without_offset(address));
-            }
-            else{reset_frame(frame);}
+            if (level == PHYSICAL_LEVEL){PMrestore(frame,get_address_without_offset(address));}
+            //else{reset_frame(frame);}
 
             PMwrite(current_address * PAGE_SIZE + next_address, frame); // create the link between the page and the frame
+
+
             current_address = frame;
         }
     }
