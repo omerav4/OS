@@ -88,6 +88,7 @@ void initialize_next_node(page* node){
  */
 void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_frame_index, uint64_t original_address,
                      page* available_frame, page* frame_to_evict, uint64_t* max_dist){
+    printf("start transverse_tree\n");
     // base case; if we are in physical memory, calculate cyclic dist
     if(cur_level > TABLES_DEPTH){
         uint64_t cur_dist = cyclic_dist( original_address,node->address);
@@ -108,7 +109,6 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
         PMread(node->address * PAGE_SIZE + row, &(node->next->address));
 
         if (node->next->address != 0) {  // page is full, continue searching in next level
-            printf("inside if\n");
             is_empty = false;
             // update max_frame_index and root
             if (node->next->address > *max_frame_index){ *max_frame_index = node->next->address;}
@@ -116,7 +116,6 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
             // node->former->next->address = node->address;
             node->row = row;
             // call next level search
-            //printf("before another transverse tree\n");
             transverse_tree(node->next, cur_level++, cur_row, max_frame_index,
                             original_address, available_frame, frame_to_evict, max_dist);
         }
@@ -157,7 +156,6 @@ uint64_t find_frame(page* root){
 
     // transverses the tree in order to find the max frame index and if there is an empty frame (frame with rows = 0).
     // we also checks which page to evict if it will be necessary
-    printf("entering transverse_tree\n");
     transverse_tree(root, 0, 0, &max_frame_index, root->address,
                     &available_frame, &frame_to_evict,&max_dist);
 
