@@ -93,6 +93,7 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
 
     if(cur_level >= TABLES_DEPTH){
         uint64_t cur_dist = cyclic_dist( requested_page,page_num);
+        printf("page num %llu\n", page_num);
         printf("cur dist %llu\n", cur_dist);
         if( cur_dist > *max_dist){  // update max_dist and page_to_evict
             *max_dist = cur_dist;
