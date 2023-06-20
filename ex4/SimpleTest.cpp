@@ -11,10 +11,8 @@ int main(int argc, char **argv) {
 
     VMread(6,&value);
 
-    for (uint64_t i = 0; i < (2 * 8); ++i) {
-        PMread(i,&value);
-        printf("i: %llu, value: %d\n", i, value);
-    }
+    VMread(31, &value);
+    printf("value %d\n", value);
 
 //    for (uint64_t i = 0; i < (2 * NUM_FRAMES); ++i) {
 //        printf("writing to %llu\n", (long long int) i);
