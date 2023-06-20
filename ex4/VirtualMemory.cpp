@@ -104,7 +104,7 @@ void transverse_tree(page* node, uint64_t cur_level, uint64_t* max_frame_index, 
     bool is_empty = true;
     for (uint64_t row = 0; row < PAGE_SIZE; ++row){   // recursive call
         initialize_next_node(node);
-        printf("before pmread2\n");
+        //printf("before pmread2\n");
         PMread(node->address * PAGE_SIZE + row, &(node->next->address));
 
         if (node->next->address != 0) {  // page is full, continue searching in next level
@@ -115,7 +115,7 @@ void transverse_tree(page* node, uint64_t cur_level, uint64_t* max_frame_index, 
             // node->former->next->address = node->address;
             node->row = row;
             // call next level search
-            printf("before another transverse tree\n");
+            //printf("before another transverse tree\n");
             transverse_tree(node->next, cur_level++, max_frame_index,
                             original_address, available_frame, frame_to_evict, max_dist);
         }
@@ -191,7 +191,7 @@ word_t get_page_address(uint64_t address){
         if (current_address == 0){
             page root = {caller_address, 0, nullptr, nullptr, 0}; // TODO change values?
             word_t frame = find_frame(&root);  // find a relevant frame
-            printf("frame %d \n", frame);
+            //printf("frame %d \n", frame);
 
             if (level == PHYSICAL_LEVEL){ PMrestore(frame,get_address_without_offset(address));}
             reset_frame(frame);
