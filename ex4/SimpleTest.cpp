@@ -12,6 +12,9 @@ int main(int argc, char **argv) {
     //VMread(13,&value);
     VMread(6,&value);
     printf("value %d\n", value);
+    PMread(3,&value);
+    printf("value %d\n", value);
+
 //    PMread();
 
 //    for (uint64_t i = 0; i < (2 * NUM_FRAMES); ++i) {
