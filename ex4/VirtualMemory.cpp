@@ -16,7 +16,7 @@
  * Has an address, a former and next pages, a row and a caller table
  */
 struct page{
-    uint64_t caller_table;
+    word_t caller_table;
     word_t address;
     page* former;
     page* next;
@@ -71,7 +71,7 @@ uint64_t cyclic_dist(uint64_t origin_address, uint64_t page_num){
 }
 
 void initialize_next_node(page* node){
-    page next = {node->caller_table, 0, nullptr, nullptr, 0};
+    page next = {node->caller_table, 0, node, nullptr, 0};
     node->next = &next;
 }
 
@@ -88,7 +88,6 @@ void initialize_next_node(page* node){
  */
 void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_frame_index, uint64_t original_address,
                      page* available_frame, page* frame_to_evict, uint64_t* max_dist){
-    printf("start transverse_tree\n");
     // base case; if we are in physical memory, calculate cyclic dist
     if(cur_level > TABLES_DEPTH){
         uint64_t cur_dist = cyclic_dist( original_address,node->address);
@@ -103,31 +102,28 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
     // if a child exists (means there is row != 0), then the current frame is not empty
     // in addition, we will update the max_frame_index to keep the maximum frame index
     bool is_empty = true;
-    for (uint64_t row = 0; row < PAGE_SIZE; row++){   // recursive call
-        printf("row %llu\n", row);
-        initialize_next_node(node);
+    for (uint64_t row = 0; row < PAGE_SIZE; ++row){   // recursive call
+//        initialize_next_node(node);
+        page next = {node->caller_table, 0, node, nullptr, 0};
+        node->next = &next;
         PMread(node->address * PAGE_SIZE + row, &(node->next->address));
-        printf("next->address before %d\n", node->next->address);
 
         if (node->next->address != 0) {  // page is full, continue searching in next level
-            printf("next->address %d\n", node->next->address);
             is_empty = false;
+
             // update max_frame_index and root
             if (node->next->address > *max_frame_index){ *max_frame_index = node->next->address;}
             node->next->former = node;
-            // node->former->next->address = node->address;
             node->row = row;
+
             // call next level search
-            transverse_tree(node->next, cur_level++, cur_row, max_frame_index,
+            transverse_tree(node->next, cur_level+1, cur_row, max_frame_index,
                             original_address, available_frame, frame_to_evict, max_dist);
         }
-        printf("biiii\n");
-
     }
     if (is_empty){
             available_frame = node;
         }
-    printf("end address %d\n", node->address);
 }
 
 /**
@@ -164,8 +160,6 @@ uint64_t find_frame(page* root){
     transverse_tree(root, 0, 0, &max_frame_index, root->address,
                     &available_frame, &frame_to_evict,&max_dist);
 
-    printf("hiiii\n");
-
     // option 1: we find an empty frame (frame with rows = 0)
     if (available_frame.address != 0 && available_frame.address != root->caller_table){
         unlink(&available_frame);
@@ -197,16 +191,13 @@ word_t get_page_address(uint64_t address){
         // if we get to undefined table (address = 0), then find a free frame, resets him (create a table) and links it
         // to the current page
         if (current_address == 0){
-            printf("inside if\n");
             page root = {caller_address, 0, nullptr, nullptr, 0}; // TODO change values?
             word_t frame = find_frame(&root);  // find a relevant frame
-            printf("frame %d \n", frame);
 
             if (level == PHYSICAL_LEVEL){PMrestore(frame,get_address_without_offset(address));}
             else{reset_frame(frame);}
 
             PMwrite(caller_address * PAGE_SIZE + next_address, frame); // create the link between the page and the frame
-            printf("new address %llu\n", caller_address * PAGE_SIZE + next_address);
             current_address = frame;
         }
     }
