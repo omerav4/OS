@@ -103,9 +103,9 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
     // in addition, we will update the max_frame_index to keep the maximum frame index
     bool is_empty = true;
     for (uint64_t row = 0; row < PAGE_SIZE; ++row){   // recursive call
-        printf("hiii\n");
         initialize_next_node(node);
         PMread(node->address * PAGE_SIZE + row, &(node->next->address));
+        printf("after pmread in tansverse");
 
         if (node->next->address != 0) {  // page is full, continue searching in next level
             printf("inside loop if != 0\n");
