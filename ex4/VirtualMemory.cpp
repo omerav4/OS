@@ -135,8 +135,11 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
  * Unlinks the current node from its child by changing its value in the physical memory to 0.
  */
 void unlink(page* node){
-    uint64_t address = node->former->address * PAGE_SIZE + node->row;
     printf("start unlink\n");
+    page* former = node->former;
+    printf("after former\n");
+    uint64_t address = former->address * PAGE_SIZE + node->row;
+    printf("after address\n");
     PMwrite(address, 0);
     printf("end unlink\n");
 
@@ -146,12 +149,9 @@ void unlink(page* node){
  * Evicts the given page
  */
 void evict(page* frame_to_evict){
-    printf("start evict\n");
     word_t frame;
     PMread(frame_to_evict->address, &frame);
-    printf("frame %d\n", frame);
     PMevict(frame, get_address_without_offset(frame_to_evict->address));
-    printf("after evict\n");
     unlink(frame_to_evict);
     printf("after unlink\n");
 }
