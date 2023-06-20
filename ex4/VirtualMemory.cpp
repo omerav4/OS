@@ -119,6 +119,7 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
             if (node->next->address > *max_frame_index){ *max_frame_index = node->next->address;}
             node->next->former = node;
             node->row = row;
+            printf("node next address %d\n", node->next->address);
 
             // call next level search
             transverse_tree(node->next, cur_level+1, cur_row, max_frame_index,
