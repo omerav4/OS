@@ -179,6 +179,7 @@ uint64_t find_frame(page* root){
  * @return the page address in the physical memory
  */
 word_t get_page_address(uint64_t address){
+    // 0000000000000000000000000000000000000000000000000000000010100000
     word_t current_address = 0;
     for (uint64_t level = TABLES_DEPTH; level > 0 ; level--){
         // Reads on each iteration the next level of the given address
