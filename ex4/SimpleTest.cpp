@@ -10,8 +10,8 @@ int main(int argc, char **argv) {
     VMwrite(13,3);
 
     //VMread(13,&value);
-//    PMread(5,&value);
-    //printf("value %d\n", value);
+    PMread(5,&value);
+    printf("value %d\n", value);
 //    PMread();
 
 //    for (uint64_t i = 0; i < (2 * NUM_FRAMES); ++i) {
