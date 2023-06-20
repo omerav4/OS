@@ -88,8 +88,6 @@ void initialize_next_node(page* node){
  */
 void transverse_tree(page* node, uint64_t cur_level, uint64_t* max_frame_index, uint64_t original_address,
                      page* available_frame, page* frame_to_evict, uint64_t* max_dist){
-    std::cout << "transverse\n";
-
     // base case; if we are in physical memory, calculate cyclic dist
     if(cur_level > TABLES_DEPTH){
         uint64_t cur_dist = cyclic_dist( original_address,node->address);
@@ -105,10 +103,8 @@ void transverse_tree(page* node, uint64_t cur_level, uint64_t* max_frame_index, 
     // in addition, we will update the max_frame_index to keep the maximum frame index
     bool is_empty = true;
     for (uint64_t row = 0; row < PAGE_SIZE; ++row){   // recursive call
-        std::cout << "first\n";
         initialize_next_node(node);
         PMread(node->address * PAGE_SIZE + row, &(node->next->address));
-        std::cout << "address " << node->next->address << "in row " << row << "\n";
 
         if (node->next->address != 0) {  // page is full, continue searching in next level
             is_empty = false;
@@ -155,7 +151,6 @@ uint64_t find_frame(page* root){
     page frame_to_evict = {root->caller_table, 0, nullptr, nullptr, 0};
     uint64_t max_frame_index = 0;
     uint64_t max_dist = 0;
-    std::cout << "find frame\n";
 
     // transverses the tree in order to find the max frame index and if there is an empty frame (frame with rows = 0).
     // we also checks which page to evict if it will be necessary
@@ -186,11 +181,8 @@ word_t get_page_address(uint64_t address){
     for (uint64_t level = TABLES_DEPTH; level > 0 ; level--){
         // Reads on each iteration the next level of the given address
         word_t caller_address = current_address;
-        std::cout << "current " << current_address << "\n";
         uint64_t next_address = get_next_address(address, level);
-        std::cout << "next " << next_address << "\n";
         PMread(current_address * PAGE_SIZE + next_address, &current_address);
-        std::cout << "real current " << current_address << "\n";
 
         // if we get to undefined table (address = 0), then find a free frame, resets him (create a table) and links it
         // to the current page
@@ -213,7 +205,6 @@ void VMinitialize(){
 }
 
 int VMread(uint64_t virtualAddress, word_t* value){
-    std::cout << "address: " << virtualAddress;
     if (virtualAddress >= VIRTUAL_MEMORY_SIZE){return FAIL;}
     PMread(get_page_address(virtualAddress), value);
     return SUCCESS;
