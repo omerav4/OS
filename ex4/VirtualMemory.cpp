@@ -120,8 +120,9 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
             // call next level search
             transverse_tree(node->next, cur_level++, cur_row, max_frame_index,
                             original_address, available_frame, frame_to_evict, max_dist);
-            printf("biiii\n");
         }
+        printf("biiii\n");
+
     }
     if (is_empty){
             available_frame = node;
