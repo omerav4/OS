@@ -77,18 +77,11 @@ void initialize_next_node(page* node){
     node->next = &next;
 }
 
+
 /**
- * Transverse the tree
- * For each
- * @param node
- * @param cur_level
- * @param max_frame_index
- * @param original_address
- * @param available_frame
- * @param frame_to_evict
- * @param max_dist
+ * Transverses the tree from the root through each existing leaf
  */
-void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_frame_index,
+void transverse_tree(page* node, uint64_t cur_level, int cur_row, word_t* max_frame_index,
                      page* available_frame, page* frame_to_evict, uint64_t* max_dist, word_t requested_page, uint64_t page_num){
     // base case; if we are in physical memory, calculate cyclic dist
     if(cur_level >= TABLES_DEPTH){
@@ -159,7 +152,7 @@ void evict(page* frame_to_evict, uint page_to_evict){
 uint64_t find_frame(page* root, word_t requested_page){
     page available_frame = {root->caller_table, 0, nullptr, 0, nullptr, 0};
     page frame_to_evict = {root->caller_table, 0, nullptr, 0, nullptr, 0};
-    uint64_t max_frame_index = 0;
+    word_t max_frame_index = 0;
     uint64_t max_dist = 0;
 
     // transverses the tree in order to find the max frame index and if there is an empty frame (frame with rows = 0).
