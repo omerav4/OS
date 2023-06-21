@@ -19,9 +19,17 @@ struct page{
     word_t caller_table;
     word_t address;
     page* former;
+    word_t former_add;
     page* next;
     uint64_t row;
+    uint64_t page;
 };
+
+//struct search_result{
+//    word_t available_frame;
+//    word_t address_to_unlink;
+//    word_t frame_to_evict;
+//};
 
 ///---------------------------------------- address manipulations ----------------------------------------------------
 /**
@@ -71,7 +79,7 @@ uint64_t cyclic_dist(uint64_t origin_address, uint64_t page_num){
 }
 
 void initialize_next_node(page* node){
-    page next = {node->caller_table, 0, node, nullptr, 0};
+    page next = {node->caller_table, 0, node, 0, nullptr, 0, 0};
     node->next = &next;
 }
 
@@ -93,13 +101,10 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
 
     if(cur_level >= TABLES_DEPTH){
         uint64_t cur_dist = cyclic_dist( requested_page ,page_num);
-//        printf("page num %llu\n", page_num);
-//        printf("cur dist %llu\n", cur_dist);
-//        printf("requested page %d\n", requested_page);
         if( cur_dist > *max_dist){  // update max_dist and page_to_evict
             *max_dist = cur_dist;
             page evicted = {node->caller_table, node->address,
-                            node->former, node->next, node->row};
+                            node->former, node->former_add, node->next, node->row, node->page};
             *frame_to_evict = evicted;
         }
         return;
@@ -110,8 +115,7 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
     // in addition, we will update the max_frame_index to keep the maximum frame index
     bool is_empty = true;
     for (uint64_t row = 0; row < PAGE_SIZE; ++row){   // recursive call
-//        initialize_next_node(node);
-        page next = {node->caller_table, 0, node, nullptr, 0};
+        page next = {node->caller_table, 0, node, node->address, nullptr, 0};
         node->next = &next;
         PMread(node->address * PAGE_SIZE + row, &(node->next->address));
 
@@ -119,16 +123,20 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
             is_empty = false;
             // update max_frame_index and root
             if (node->next->address > *max_frame_index){ *max_frame_index = node->next->address;}
-            node->next->former = node;
+            page former_of_next = {node->caller_table, node->address, node->former, node->former_add,node->next, node->row, node->page};
+            *(node->next->former) = former_of_next;
             // node->former->next->address = node->address;
-            node->row = row;
+            node->next->row = row;
+            node->next->page = (page_num << OFFSET_WIDTH) + row;
             // call next level search
             transverse_tree(node->next, cur_level+1, cur_row, max_frame_index,
                             available_frame, frame_to_evict, max_dist, requested_page, (page_num << OFFSET_WIDTH) + row);
         }
     }
-    if (is_empty){
-        page available = {node->caller_table, node->address, node->former, node->next};
+    if (is_empty&& node->address!=node->caller_table){
+
+        page available_former = {node->former->caller_table, node->former->address, node->former->former, node->former->former_add, node, node->former->row, node->former->page};
+        page available = {node->caller_table, node->address, &available_former, node->former_add,node->next, node->row, node->page};
         *available_frame = available;
         }
 
@@ -138,7 +146,7 @@ void transverse_tree(page* node, uint64_t cur_level, int cur_row, uint64_t* max_
  * Unlinks the current node from its child by changing its value in the physical memory to 0.
  */
 void unlink(page* node){
-    uint64_t address = node->former->address * PAGE_SIZE + node->row;
+    uint64_t address = node->former_add * PAGE_SIZE + node->row;  //TODO checking change
     PMwrite(address, 0);
 }
 
@@ -146,11 +154,9 @@ void unlink(page* node){
  * Evicts the given page
  * @return
  */
-word_t evict(page* frame_to_evict){
-    word_t frame;
-    PMread(frame_to_evict->address, &frame);
-    PMevict(frame, get_address_without_offset(frame_to_evict->address));
+word_t evict(page* frame_to_evict, uint page_to_evict){
     unlink(frame_to_evict);
+    PMevict(frame_to_evict->address, page_to_evict);
 }
 
 
@@ -158,8 +164,8 @@ word_t evict(page* frame_to_evict){
  * Finds a frame to put the given page in or evicts another page if necessary
  */
 uint64_t find_frame(page* root, word_t requested_page){
-    page available_frame = {root->caller_table, 0, nullptr, nullptr, 0};
-    page frame_to_evict = {root->caller_table, 0, nullptr, nullptr, 0};
+    page available_frame = {root->caller_table, 0, nullptr, 0, nullptr, 0};
+    page frame_to_evict = {root->caller_table, 0, nullptr, 0, nullptr, 0};
     uint64_t max_frame_index = 0;
     uint64_t max_dist = 0;
 
@@ -179,7 +185,7 @@ uint64_t find_frame(page* root, word_t requested_page){
     if (max_frame_index + 1 < NUM_FRAMES){return (max_frame_index + 1);}
 
     // option 3: otherwise, evict a page and returns its frame
-    evict(&frame_to_evict);     // TODO verify already evicted frames
+    evict(&frame_to_evict, frame_to_evict.page);     // TODO verify already evicted frames
     return frame_to_evict.address;
 }
 
@@ -202,7 +208,7 @@ word_t get_page_address(uint64_t address){
         // to the current page
         if (current_address == 0){
 //            printf("inside if\n");
-            page root = {caller_address, 0, nullptr, nullptr, 0}; // TODO change values?
+            page root = {caller_address, 0, nullptr, 0,nullptr, 0}; // TODO change values?
             word_t frame = find_frame(&root, requested_page);  // find a relevant frame
 //            printf("frame %d \n", frame);
 
