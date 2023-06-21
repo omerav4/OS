@@ -5,10 +5,9 @@
 
 
 ///------------------------------------------- macros -------------------------------------------------------
-#define SUCCESS 1
-#define FAIL 0
-#define LAST_PAGE 1
-#define PHYSICAL_LEVEL 1
+//#define SUCCESS 1
+//#define FAIL 0
+//#define PHYSICAL_LEVEL 1
 
 ///------------------------------------------- structs -------------------------------------------------------
 /**
@@ -195,7 +194,7 @@ word_t get_page_address(uint64_t address){
             page root = {caller_address, 0, nullptr, 0,nullptr, 0}; // TODO change values?
             word_t frame = find_frame(&root, requested_page);  // find a relevant frame
 
-            if (level == PHYSICAL_LEVEL){PMrestore(frame,get_address_without_offset(address));}
+            if (level == 1){PMrestore(frame,get_address_without_offset(address));}
             else{reset_frame(frame);}
 
             PMwrite(caller_address * PAGE_SIZE + next_address, frame); // create the link between the page and the frame
@@ -213,15 +212,15 @@ void VMinitialize(){
 }
 
 int VMread(uint64_t virtualAddress, word_t* value){
-    if (virtualAddress >= VIRTUAL_MEMORY_SIZE){return FAIL;}
+    if (virtualAddress >= VIRTUAL_MEMORY_SIZE){return 0;}
     uint64_t address = get_page_address(virtualAddress);
     PMread(address, value);
-    return SUCCESS;
+    return 1;
 }
 
 int VMwrite(uint64_t virtualAddress, word_t value){
-    if (virtualAddress >= VIRTUAL_MEMORY_SIZE){return FAIL;}
+    if (virtualAddress >= VIRTUAL_MEMORY_SIZE){return 0;}
     uint64_t address = get_page_address(virtualAddress);
     PMwrite(address, value);
-    return SUCCESS;
+    return 1;
 }
