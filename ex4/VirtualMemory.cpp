@@ -87,7 +87,7 @@ uint64_t cyclic_dist(uint64_t origin_address, uint64_t page_num){
 /**
  * Transverses the tree
  */
-void transverse_tree(page* node, uint64_t* max_frame_index,
+void transverse_tree(page* node, word_t* max_frame_index,
                      page* available_frame, page* frame_to_evict, uint64_t* max_dist, word_t requested_page){
 
     // base case; if we are in physical memory, calculate cyclic dist
@@ -161,7 +161,7 @@ void evict(page* frame_to_evict, uint_fast64_t page_to_evict){
 uint64_t find_frame(page* root, word_t requested_page){
     page available_frame = {root->caller_table, 0, 0, nullptr, 0, 0};
     page frame_to_evict = {root->caller_table, 0, 0, nullptr, 0, 0};
-    uint64_t max_frame_index = 0;
+    word_t max_frame_index = 0;
     uint64_t max_dist = 0;
 
     // transverses the tree in order to find the max frame index and if there is an empty frame (frame with rows = 0).
